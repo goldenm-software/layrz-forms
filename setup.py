@@ -4,13 +4,13 @@ import setuptools
 
 def long_description():
   """ Return long description """
-  with open("README.md", "r", encoding='utf-8') as fh:
+  with open('README.md', 'r', encoding='utf-8') as fh:
     return fh.read()
 
 
 setuptools.setup(
   name="layrz-forms",
-  version="1.0.2",
+  version="1.0.3",
   author="Golden M",
   author_email="software@goldenmcorp.com",
   description="Layrz forms and tools for Python",

@@ -29,7 +29,7 @@ class NumberField(Field):
     self.min_value = min_value
     self.max_value = max_value
 
-  def validate(self, key, value, errors, cleaned_data):
+  def validate(self, key, value, errors):
     """
     Validate the field with the following rules:
     - Should be a int or float (Depending of the datatype)
@@ -41,11 +41,9 @@ class NumberField(Field):
         Value to validate
       errors: dict
         Dict of errors
-      cleaned_data: dict
-        Dict of cleaned data
     """
 
-    super(NumberField, self).validate(key=key, value=value, errors=errors, cleaned_data=cleaned_data)
+    super(NumberField, self).validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, self.datatype):
       self._append_error(key=key, errors=errors, to_add={'code': 'invalid'})

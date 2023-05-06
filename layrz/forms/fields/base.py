@@ -7,7 +7,7 @@ class Field:
   def __init__(self, required=False):
     self.required = required
 
-  def validate(self, key, value, errors, cleaned_data):
+  def validate(self, key, value, errors):
     """ Validate is the field is blank or None if is required
     ---
     Arguments
@@ -17,11 +17,7 @@ class Field:
         Value to validate
       errors: dict
         Dict of errors
-      cleaned_data: dict
-        Dict of cleaned data
     """
-
-    cleaned_data[key] = value
 
     if self.required:
       if value is None:

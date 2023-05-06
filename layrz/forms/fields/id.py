@@ -14,7 +14,7 @@ class IdField(Field):
   def __init__(self, required=False):
     super(IdField, self).__init__(required=required)
 
-  def validate(self, key, value, errors, cleaned_data):
+  def validate(self, key, value, errors):
     """
     Validate the field with the following rules:
     - Should be a number or a string that can be converted to a number
@@ -27,11 +27,9 @@ class IdField(Field):
         Value to validate
       errors: dict
         Dict of errors
-      cleaned_data: dict
-        Dict of cleaned data
     """
 
-    super(IdField, self).validate(key=key, value=value, errors=errors, cleaned_data=cleaned_data)
+    super(IdField, self).validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, (int, str)):
       self._append_error(
