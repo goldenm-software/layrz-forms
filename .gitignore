@@ -1,0 +1,9 @@
+/dist
+/build
+/*.egg-info
+/.pypirc
+/test.py
+/**/*.pyc
+/.venv
+/site
+/**/*/.DS_Store
