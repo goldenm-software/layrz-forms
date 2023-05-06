@@ -1,6 +1,5 @@
 """ Email field """
 from .base import Field
-from layrz.converters import convert_to_camel
 
 
 class CharField(Field):

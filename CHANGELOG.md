@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.2
+* hotfix
+
 ## v1.0.1
 * Fixed long_description in setup
 

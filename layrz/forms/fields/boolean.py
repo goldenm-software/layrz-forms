@@ -1,6 +1,5 @@
 """ Boolean field """
 from .base import Field
-from layrz.converters import convert_to_camel
 
 
 class BooleanField(Field):
