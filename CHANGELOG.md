@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.4
+* Hotfix
+
 ## v1.0.3
 * Removed multiprocessing option
 
