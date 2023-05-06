@@ -83,6 +83,8 @@ class Form:
     for func in self._clean_functions:
       self._clean(clean_func=func)
 
+    return len(self._errors) == 0
+
   def errors(self):
     """ Returns the list of errors """
     return self._errors

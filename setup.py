@@ -10,7 +10,7 @@ def long_description():
 
 setuptools.setup(
   name="layrz-forms",
-  version="1.0.3",
+  version="1.0.4",
   author="Golden M",
   author_email="software@goldenmcorp.com",
   description="Layrz forms and tools for Python",
