@@ -25,7 +25,7 @@ class JsonField(Field):
     self.empty = empty
     self.datatype = datatype
 
-  def validate(self, key, value, errors, cleaned_data):
+  def validate(self, key, value, errors):
     """
     Validate the field with the following rules:
     - Should be a dict or list (Depending of the datatype)
@@ -40,11 +40,9 @@ class JsonField(Field):
         Value to validate
       errors: dict
         Dict of errors
-      cleaned_data: dict
-        Dict of cleaned data
     """
 
-    super(JsonField, self).validate(key=key, value=value, errors=errors, cleaned_data=cleaned_data)
+    super(JsonField, self).validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, self.datatype):
       self._append_error(

@@ -14,7 +14,7 @@ class BooleanField(Field):
   def __init__(self, required=False):
     super(BooleanField, self).__init__(required=required)
 
-  def validate(self, key, value, errors, cleaned_data):
+  def validate(self, key, value, errors):
     """
     Validate the field with the following rules:
     - Should be a bool
@@ -26,11 +26,9 @@ class BooleanField(Field):
         Value to validate
       errors: dict
         Dict of errors
-      cleaned_data: dict
-        Dict of cleaned data
     """
 
-    super(BooleanField, self).validate(key=key, value=value, errors=errors, cleaned_data=cleaned_data)
+    super(BooleanField, self).validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, bool):
       self._append_error(
