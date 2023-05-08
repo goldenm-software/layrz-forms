@@ -1,5 +1,8 @@
 # Changelog
 
+## v1.0.5
+* Added support for nested fields along with forms
+* Added extra condition at the moment of validate the type of the field (boolean, number, id) to avoid false invalid when is not required
 ## v1.0.4
 * Hotfix
 
