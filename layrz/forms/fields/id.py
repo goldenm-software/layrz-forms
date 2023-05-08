@@ -38,6 +38,8 @@ class IdField(Field):
         to_add={'code': 'invalid'},
       )
     else:
+      if value is None:
+        return
       if isinstance(value, str):
         value = int(value)
       if value <= 0:
