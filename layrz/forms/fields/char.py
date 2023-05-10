@@ -86,13 +86,14 @@ class CharField(Field):
           )
 
       if self.choices is not None:
-        if value not in self.choices:
+        mapped_choices = [choice[0] for choice in self.choices]
+        if value not in mapped_choices:
           self._append_error(
             key=key,
             errors=errors,
             to_add={
               'code': 'invalidChoice',
-              'expected': self.choices,
+              'expected': mapped_choices,
               'received': value,
             },
           )
