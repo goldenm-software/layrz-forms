@@ -10,13 +10,15 @@ def long_description():
 
 setuptools.setup(
   name="layrz-forms",
-  version="1.0.7",
+  version="1.0.8",
   author="Golden M",
   author_email="software@goldenmcorp.com",
   description="Layrz forms and tools for Python",
   long_description=long_description(),
   long_description_content_type="text/markdown",
   packages=setuptools.find_packages(),
+  namespace_packages=['layrz'],
+  zip_safe=False,
   classifiers=[
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
