@@ -1,5 +1,5 @@
 [project]
-name = "layrz-sdk"
+name = "layrz-forms"
 version = "1.0.9"
 description = "Layrz forms and tools for Python"
 authors = [
