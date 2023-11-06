@@ -1,4 +1,7 @@
 # Changelog
+## v1.0.9
+- Migrated to GitHub
+
 ## v1.0.7
 - Fixes on package namespace
 

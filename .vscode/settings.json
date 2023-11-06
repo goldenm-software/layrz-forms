@@ -1,21 +1,16 @@
 {
-  "python.linting.pylintEnabled": true,
-  "python.linting.pylintArgs": [
-    "--rcfile=.pylintrc"
-  ],
-  "python.linting.enabled": true,
-  "python.formatting.provider": "yapf",
-  "python.formatting.yapfArgs": [
-      "--style",
-      "{indent_width: 2, use_tabs: false, continuation_indent_width: 2, coalesce_brackets: false, column_limit: 120}"
-  ],
-  "python.linting.lintOnSave": true,
   "[python]": {
     "editor.codeActionsOnSave": {
       "source.organizeImports": true,
+      "source.fixAll": true
     },
-    "editor.formatOnSave": true,
-    "editor.defaultFormatter": "ms-python.python",
     "editor.rulers": [120],
-  }
+    // New for VSCODE and using yapf extension (Preview)
+    "editor.formatOnSaveMode": "file",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "eeyore.yapf"
+  },
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true
 }
