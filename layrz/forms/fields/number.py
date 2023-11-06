@@ -45,7 +45,7 @@ class NumberField(Field):
 
     super(NumberField, self).validate(key=key, value=value, errors=errors)
 
-    if not isinstance(value, self.datatype):
+    if not isinstance(value, self.datatype) and (self.required and value is not None):
       self._append_error(key=key, errors=errors, to_add={'code': 'invalid'})
     else:
       try:
@@ -72,8 +72,9 @@ class NumberField(Field):
               },
             )
       except ValueError:
-        self._append_error(
-          key=key,
-          errors=errors,
-          to_add={'code': 'invalid'},
-        )
+        if self.required:
+          self._append_error(
+            key=key,
+            errors=errors,
+            to_add={'code': 'invalid'},
+          )

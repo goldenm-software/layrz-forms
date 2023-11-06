@@ -1,4 +1,6 @@
 """ Init file """
+import inspect
+
 from .fields.base import Field
 from .fields.boolean import BooleanField
 from .fields.char import CharField
@@ -6,7 +8,6 @@ from .fields.email import EmailField
 from .fields.id import IdField
 from .fields.json import JsonField
 from .fields.number import NumberField
-import inspect
 
 
 class Form:
@@ -28,11 +29,6 @@ class Form:
     """ Constructor """
     self._obj = obj
     self.calculate_members()
-
-  @property
-  def _reserverd_words(self):
-    """ Reserved words """
-    return ('add_errors', 'change_obj', 'clean', 'errors', 'is_valid', 'set_obj', 'calculate_members', 'cleaned_data')
 
   @property
   def cleaned_data(self):
@@ -89,47 +85,6 @@ class Form:
     """ Returns the list of errors """
     return self._errors
 
-  def _validate_field(self, field):
-    """ Validate field """
-    if isinstance(field[1], Field):
-      func = getattr(field[1], 'validate')
-      if callable(func):
-        # Validate if the validate function has the correct parameters
-        params = [p for p, _ in inspect.signature(func).parameters.items()]
-        valid_params = ['key', 'value', 'errors']
-
-        if len(params) != len(valid_params):
-          raise Exception(f'{type(field[1])} validate method has no the correct parameters')  #pylint: disable=W0719
-
-        is_valid = False
-        for param in params:
-          if param in valid_params:
-            is_valid = True
-            continue
-          is_valid = False
-          break
-
-        if not is_valid:
-          raise Exception(   #pylint: disable=W0719
-            f'{field[0]} of type {type(field[1]).__name__} validate method has no the correct ' +\
-            f'parameters. Expected parameters: {", ".join(valid_params)}. ' +\
-            f'Actual parameters: {", ".join(params)}'
-          )
-
-        field[1].validate(
-          key=field[0],
-          value=self._obj.get(field[0], None),
-          errors=self._errors,
-        )
-      else:
-        raise Exception(f'{type(field[1])} has no validate method')  #pylint: disable=W0719
-
-  def _clean(self, clean_func):
-    """ Clean function """
-    func = getattr(self, clean_func)
-    if callable(func):
-      func()
-
   def add_errors(self, key='', code='', extra_args=dict):
     """ Add custom errors
     This function is designed to be used in a clean function
@@ -157,6 +112,47 @@ class Form:
       new_error.update(extra_args)
     self._errors[camel_key].append(new_error)
 
+  def _validate_field(self, field, new_key=None):
+    """ Validate field """
+    if isinstance(field[1], Field):
+      func = getattr(field[1], 'validate')
+      if callable(func):
+        # Validate if the validate function has the correct parameters
+        params = [p for p, _ in inspect.signature(func).parameters.items()]
+        valid_params = ['key', 'value', 'errors']
+
+        if len(params) != len(valid_params):
+          raise Exception(f'{type(field[1])} validate method has no the correct parameters')  #pylint: disable=W0719
+
+        is_valid = False
+        for param in params:
+          if param in valid_params:
+            is_valid = True
+            continue
+          is_valid = False
+          break
+
+        if not is_valid:
+          raise Exception(   #pylint: disable=W0719
+            f'{field[0]} of type {type(field[1]).__name__} validate method has no the correct ' +\
+            f'parameters. Expected parameters: {", ".join(valid_params)}. ' +\
+            f'Actual parameters: {", ".join(params)}'
+          )
+
+        field[1].validate(
+          key=field[0] if new_key is None else new_key,
+          value=self._obj.get(field[0], None),
+          errors=self._errors,
+        )
+      else:
+        raise Exception(f'{type(field[1])} has no validate method')  #pylint: disable=W0719
+
+  def _clean(self, clean_func):
+    """ Clean function """
+    func = getattr(self, clean_func)
+    if callable(func):
+      func()
+
   def _convert_to_camel(self, key):
     """
     Convert the key to camel case
@@ -174,6 +170,8 @@ class Form:
 
   def _validate_sub_form(self, field, form, data):
     """ Validate sub form """
+    if not isinstance(form, Form):
+      return
     form.set_obj(data)
     form.calculate_members()
     if not form.is_valid():
@@ -189,4 +187,28 @@ class Form:
 
     if isinstance(list_obj, (list, tuple)):
       for i, obj in enumerate(list_obj):
-        self._validate_sub_form(field=f'{field}.{i}', form=form, data=obj)
+        if isinstance(obj, Field):
+          self._validate_field(
+            field=obj,
+            new_key=f'{field}.{i}',
+          )
+        elif isinstance(obj, Form):
+          self._validate_sub_form(
+            field=f'{field}.{i}',
+            form=form,
+            data=obj,
+          )
+
+  @property
+  def _reserverd_words(self):
+    """ Reserved words """
+    return (
+      'add_errors',
+      'change_obj',
+      'clean',
+      'errors',
+      'is_valid',
+      'set_obj',
+      'calculate_members',
+      'cleaned_data',
+    )

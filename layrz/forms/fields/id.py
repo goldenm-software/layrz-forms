@@ -31,13 +31,15 @@ class IdField(Field):
 
     super(IdField, self).validate(key=key, value=value, errors=errors)
 
-    if not isinstance(value, (int, str)):
+    if not isinstance(value, (int, str)) and (self.required and value is not None):
       self._append_error(
         key=key,
         errors=errors,
         to_add={'code': 'invalid'},
       )
     else:
+      if value is None:
+        return
       if isinstance(value, str):
         value = int(value)
       if value <= 0:
