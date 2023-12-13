@@ -187,12 +187,12 @@ class Form:
 
     if isinstance(list_obj, (list, tuple)):
       for i, obj in enumerate(list_obj):
-        if isinstance(obj, Field):
+        if isinstance(form, Field):
           self._validate_field(
             field=obj,
             new_key=f'{field}.{i}',
           )
-        elif isinstance(obj, Form):
+        elif isinstance(form, Form):
           self._validate_sub_form(
             field=f'{field}.{i}',
             form=form,
