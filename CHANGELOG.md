@@ -1,4 +1,7 @@
 # Changelog
+## 1.0.10
+- Fixed issue with nested forms, now will be validated correctly
+
 ## v1.0.9
 - Migrated to GitHub
 
