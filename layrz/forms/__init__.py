@@ -53,7 +53,7 @@ class Form:
       elif isinstance(item[1], Field):
         self._attributes[item[0]] = item[1]
       elif isinstance(item[1], list):
-        self._nested_attrs[item[0]] = item[1]
+        self._nested_attrs[item[0]] = item
       elif isinstance(item[1], Form):
         self._sub_forms_attrs[item[0]] = item[1]
       else:
