@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.12
+
+- Fixed issue with nested fields (Previous fix was not working properly)
+
 ## 1.0.11
 
 - Fixed issue with nested fields

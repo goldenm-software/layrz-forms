@@ -48,16 +48,22 @@ class Form:
         continue
       if item[0].startswith('_'):
         continue
-      elif item[0].startswith('clean'):
+
+      if item[0].startswith('clean'):
         self._clean_functions.append(item[0])
-      elif isinstance(item[1], Field):
+        continue
+
+      if isinstance(item[1], Field):
         self._attributes[item[0]] = item[1]
-      elif isinstance(item[1], list):
-        self._nested_attrs[item[0]] = item
-      elif isinstance(item[1], Form):
+        continue
+
+      if isinstance(item[1], list):
+        self._nested_attrs[item[0]] = item[1]
+        continue
+
+      if isinstance(item[1], Form):
         self._sub_forms_attrs[item[0]] = item[1]
-      else:
-        print('Unknown field', item[0])
+        continue
 
   def set_obj(self, obj):
     """ Set the object """
@@ -74,7 +80,14 @@ class Form:
       self._validate_sub_form(field=field, form=form, data=self._obj.get(field, {}))
 
     for field, form in self._nested_attrs.items():
-      self._validate_sub_form_as_list(field=field, form=form[0])
+      if isinstance(form[0], Field):
+        self._validate_sub_form(
+          field=field,
+          form=form[0],
+          data=self._obj.get(field, {}),
+        )
+      else:
+        self._validate_sub_form_as_list(field=field, form=form[0])
 
     for func in self._clean_functions:
       self._clean(clean_func=func)
@@ -172,6 +185,7 @@ class Form:
     """ Validate sub form """
     if not isinstance(form, Form):
       return
+
     form.set_obj(data)
     form.calculate_members()
     if not form.is_valid():
