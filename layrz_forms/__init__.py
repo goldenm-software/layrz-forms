@@ -1,13 +1,8 @@
-""" Init file """
+""" Layrz Forms """
 import inspect
+from typing import Any
 
-from .fields.base import Field
-from .fields.boolean import BooleanField
-from .fields.char import CharField
-from .fields.email import EmailField
-from .fields.id import IdField
-from .fields.json import JsonField
-from .fields.number import NumberField
+from .fields import (BooleanField, CharField, EmailField, Field, IdField, JsonField, NumberField)
 
 
 class Form:
@@ -25,17 +20,18 @@ class Form:
   _nested_attrs = {}
   _sub_forms_attrs = {}
 
-  def __init__(self, obj=dict):
+  def __init__(self, obj: dict = None):
     """ Constructor """
-    self._obj = obj
+    self._obj = obj if obj is not None else {}
+
     self.calculate_members()
 
   @property
-  def cleaned_data(self):
+  def cleaned_data(self) -> dict:
     """ Returns the cleaned data """
     return self._obj
 
-  def calculate_members(self):
+  def calculate_members(self) -> None:
     """ Calculate members """
     self._errors = {}
     self._clean_functions = []
@@ -65,11 +61,11 @@ class Form:
         self._sub_forms_attrs[item[0]] = item[1]
         continue
 
-  def set_obj(self, obj):
+  def set_obj(self, obj: dict) -> None:
     """ Set the object """
     self._obj = obj
 
-  def is_valid(self):
+  def is_valid(self) -> bool:
     """ Returns if the form is valid """
     self._errors = {}
 
@@ -94,11 +90,11 @@ class Form:
 
     return len(self._errors) == 0
 
-  def errors(self):
+  def errors(self) -> dict:
     """ Returns the list of errors """
     return self._errors
 
-  def add_errors(self, key='', code='', extra_args=dict):
+  def add_errors(self, key: str = '', code: str = '', extra_args: dict = None) -> None:
     """ Add custom errors
     This function is designed to be used in a clean function
     ---
@@ -125,7 +121,7 @@ class Form:
       new_error.update(extra_args)
     self._errors[camel_key].append(new_error)
 
-  def _validate_field(self, field, new_key=None):
+  def _validate_field(self, field: tuple, new_key: str = None) -> None:
     """ Validate field """
     if isinstance(field[1], Field):
       func = getattr(field[1], 'validate')
@@ -160,13 +156,13 @@ class Form:
       else:
         raise Exception(f'{type(field[1])} has no validate method')  #pylint: disable=W0719
 
-  def _clean(self, clean_func):
+  def _clean(self, clean_func: str) -> None:
     """ Clean function """
     func = getattr(self, clean_func)
     if callable(func):
       func()
 
-  def _convert_to_camel(self, key):
+  def _convert_to_camel(self, key: str) -> str:
     """
     Convert the key to camel case
     """
@@ -181,7 +177,7 @@ class Form:
 
     return '.'.join(field_final)
 
-  def _validate_sub_form(self, field, form, data):
+  def _validate_sub_form(self, field: str, form: Any, data: dict) -> None:
     """ Validate sub form """
     if not isinstance(form, Form):
       return
@@ -195,7 +191,7 @@ class Form:
           del error['code']
           self.add_errors(key=f'{field}.{key}', code=code, extra_args=error)
 
-  def _validate_sub_form_as_list(self, field, form):
+  def _validate_sub_form_as_list(self, field: str, form: Any) -> None:
     """ Validate sub form for list """
     list_obj = self._obj.get(field, [])
 
@@ -214,7 +210,7 @@ class Form:
           )
 
   @property
-  def _reserverd_words(self):
+  def _reserverd_words(self) -> tuple[str]:
     """ Reserved words """
     return (
       'add_errors',

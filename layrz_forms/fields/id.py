@@ -1,4 +1,6 @@
 """ ID field """
+from typing import Any
+
 from .base import Field
 
 
@@ -11,10 +13,10 @@ class IdField(Field):
       Indicates if the field is required or not
   """
 
-  def __init__(self, required=False):
-    super(IdField, self).__init__(required=required)
+  def __init__(self, required: bool = False) -> None:
+    super().__init__(required=required)
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should be a number or a string that can be converted to a number
@@ -29,7 +31,7 @@ class IdField(Field):
         Dict of errors
     """
 
-    super(IdField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, (int, str)) and (self.required and value is not None):
       self._append_error(

@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0
+
+- Due to a incompatibility with shared namespaces, we changed the usage of the library from `from layrz import forms` to `import layrz_forms as forms`
+
 ## 1.0.12
 
 - Fixed issue with nested fields (Previous fix was not working properly)

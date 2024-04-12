@@ -1,5 +1,7 @@
 """ Email field """
 import re
+from typing import Any
+
 from .base import Field
 
 
@@ -18,15 +20,15 @@ class EmailField(Field):
 
   def __init__(
     self,
-    required=False,
-    empty=False,
-    regex=r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,63}$',
-  ):
-    super(EmailField, self).__init__(required=required)
+    required: bool = False,
+    empty: bool = False,
+    regex: str = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,63}$',
+  ) -> None:
+    super().__init__(required=required)
     self.empty = empty
     self.regex = regex
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should be a valid email, the validation will compile the regex
@@ -40,7 +42,7 @@ class EmailField(Field):
         Dict of errors
     """
 
-    super(EmailField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if isinstance(value, str):
       if not self.empty:

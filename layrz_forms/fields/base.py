@@ -1,13 +1,15 @@
 """ Base class for the fields """
 
+from typing import Any
+
 
 class Field:
   """ Field abstract class """
 
-  def __init__(self, required=False):
+  def __init__(self, required: bool = False) -> None:
     self.required = required
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """ Validate is the field is blank or None if is required
     ---
     Arguments
@@ -23,14 +25,14 @@ class Field:
       if value is None:
         self._append_error(key=key, errors=errors, to_add={'code': 'required'})
 
-  def _convert_to_camel(self, key):
+  def _convert_to_camel(self, key: str) -> str:
     """
     Convert the key to camel case
     """
     init, *temp = key.split('_')
 
     field = ''.join([init, *map(str.title, temp)])
-    field_items = field.split(".")
+    field_items = field.split('.')
 
     field_final = []
     for item in field_items:
@@ -38,7 +40,7 @@ class Field:
 
     return '.'.join(field_final)
 
-  def _append_error(self, key, errors, to_add):
+  def _append_error(self, key: str, errors: dict, to_add: dict) -> None:
     """
     Append an error to a dict of errors
     ---

@@ -8,7 +8,7 @@ This project is a collection of tools that we use to make django developers life
 The idea is simple, replace the django forms to a more easier way to use them. Also provide the ability to return the errors key to support i18n.
 
 ```python
-import layrz.forms as forms
+import layrz_forms as forms
 
 
 class ExampleForm(forms.Form):
