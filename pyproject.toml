@@ -1,6 +1,6 @@
 [project]
 name = "layrz-forms"
-version = "2.0.0"
+version = "2.0.1"
 description = "Layrz forms and tools for Python"
 authors = [
   {name = "Golden M, Inc.", email = "software@goldenm.com"}
@@ -34,14 +34,6 @@ classifiers = [
 [project.urls]
 Repository = "https://github.com/goldenm-software/layrz-forms"
 Changelog = "https://github.com/goldenm-software/layrz-forms/blob/main/CHANGELOG.md"
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = [
-  "layrz_forms",
-  "layrz_forms.*",
-]
-namespaces = true
 
 [build-system]
 requires = ["setuptools", "setuptools-scm"]

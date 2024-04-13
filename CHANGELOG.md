@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+- Removed namespace scan in `pyproject.toml` to avoid issues with other libraries
+
 ## 2.0.0
 
 - Due to a incompatibility with shared namespaces, we changed the usage of the library from `from layrz import forms` to `import layrz_forms as forms`
