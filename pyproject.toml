@@ -5,7 +5,7 @@ description = "Layrz forms and tools for Python"
 authors = [
   {name = "Golden M, Inc.", email = "software@goldenm.com"}
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 maintainers = [
   {name = "Kenny Mochizuki", email = "kenny@goldenm.com"},
@@ -26,9 +26,9 @@ keywords = [
 ]
 classifiers = [
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 
 [project.urls]
