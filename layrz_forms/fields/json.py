@@ -1,47 +1,49 @@
-""" JSON Field """
-from typing import Any
+"""JSON Field"""
+
+from typing import Any, Dict, List, Self, Type
+
+from layrz_forms.types import ErrorType
 
 from .base import Field
 
 
 class JsonField(Field):
-  """
-  JsonField class for validation
-  ---
-  Attributes
-    required: bool
-      Indicates if the field is required or not
-    empty: bool
-      Indicates if the field can be empty or not
-    datatype: (dict, list)
-      Indicates the datatype of the field
-  """
+  """JSON Field"""
 
   def __init__(
-    self,
+    self: Self,
     required: bool = False,
     empty: bool = False,
-    datatype: callable = dict,
+    datatype: Type[List[Any] | Dict[Any, Any]] = dict,
   ) -> None:
+    """
+    JsonField constructor
+
+    :param required: Indicates if the field is required or not
+    :type required: bool
+    :param empty: Indicates if the field can be empty
+    :type empty: bool
+    :param datatype: Type of the field
+    :type datatype: Type[List[Any] | Dict[Any, Any]]
+    """
     super().__init__(required=required)
     self.empty = empty
     self.datatype = datatype
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
     Validate the field with the following rules:
     - Should be a dict or list (Depending of the datatype)
     - If `empty` is False, the field should not be empty
       * For `dict`, should have at least 1 key
       * For `list`, should have at least 1 item
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     super().validate(key=key, value=value, errors=errors)
@@ -52,6 +54,7 @@ class JsonField(Field):
         errors=errors,
         to_add={'code': 'invalid'},
       )
+
     elif not self.empty:
       length = 0
 

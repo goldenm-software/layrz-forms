@@ -1,33 +1,41 @@
-""" Base class for the fields """
+"""Base class for the fields"""
 
-from typing import Any
+from typing import Any, Self
+
+from layrz_forms.types import ErrorType
 
 
 class Field:
-  """ Field abstract class """
+  """Field abstract class"""
 
-  def __init__(self, required: bool = False) -> None:
+  def __init__(self: Self, required: bool = False) -> None:
     self.required = required
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
-    """ Validate is the field is blank or None if is required
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
+    """
+    Validate is the field is blank or None if is required
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     if self.required:
       if value is None:
         self._append_error(key=key, errors=errors, to_add={'code': 'required'})
 
-  def _convert_to_camel(self, key: str) -> str:
+  def _convert_to_camel(self: Self, key: str) -> str:
     """
     Convert the key to camel case
+
+    :param key: Key to convert
+    :type key: str
+
+    :return: Key in camel case
+    :rtype: str
     """
     init, *temp = key.split('_')
 
@@ -40,17 +48,16 @@ class Field:
 
     return '.'.join(field_final)
 
-  def _append_error(self, key: str, errors: dict, to_add: dict) -> None:
+  def _append_error(self: Self, key: str, errors: ErrorType, to_add: ErrorType) -> None:
     """
     Append an error to a dict of errors
-    ---
-    Arguments
-      key: str
-        Key of the error
-      errors: dict
-        Dict of errors
-      to_add: dict
-        Error to add
+
+    :param key: Key of the field
+    :type key: str
+    :param errors: Errors dict
+    :type errors: ErrorType
+    :param to_add: Error to add
+    :type to_add: ErrorType
     """
 
     key = self._convert_to_camel(key=key)

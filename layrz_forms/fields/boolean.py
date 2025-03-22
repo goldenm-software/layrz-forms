@@ -1,33 +1,35 @@
-""" Boolean field """
-from typing import Any
+"""Boolean field"""
+
+from typing import Any, Self
+
+from layrz_forms.types import ErrorType
 
 from .base import Field
 
 
 class BooleanField(Field):
-  """
-  IdField class for validation
-  ---
-  Attributes
-    required: bool
-      Indicates if the field is required or not
-  """
+  """Boolean Field"""
 
-  def __init__(self, required: bool = False) -> None:
+  def __init__(self: Self, required: bool = False) -> None:
+    """
+    BooleanField constructor
+
+    :param required: Indicates if the field is required or not
+    :type required: bool
+    """
     super().__init__(required=required)
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
     Validate the field with the following rules:
     - Should be a bool
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     super().validate(key=key, value=value, errors=errors)
