@@ -1,6 +1,6 @@
 [project]
 name = "layrz-forms"
-version = "2.1.2"
+version = "2.1.3"
 description = "Layrz forms and tools for Python"
 authors = [
   {name = "Golden M, Inc.", email = "software@goldenm.com"}

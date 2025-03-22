@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.3
+
+- Fixed again the `choices` typing on `CharField`
+
 ## 2.1.2
 
 - Removed forcing kwargs on `add_errors()` method
