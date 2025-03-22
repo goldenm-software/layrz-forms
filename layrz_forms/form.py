@@ -52,7 +52,7 @@ class Form:
     self._sub_forms_attrs = {}
 
     for item in inspect.getmembers(self):
-      if item[0] in self._reserverd_words:
+      if item[0] in self._reserved_words:
         continue
       if item[0].startswith('_'):
         continue
@@ -285,7 +285,7 @@ class Form:
           )
 
   @property
-  def _reserverd_words(self: Self) -> Tuple[str, ...]:
+  def _reserved_words(self: Self) -> Tuple[str, ...]:
     """Reserved words"""
     return (
       'add_errors',
