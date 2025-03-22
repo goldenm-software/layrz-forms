@@ -1,6 +1,6 @@
 """Char field"""
 
-from typing import Any, List, Optional, Self
+from typing import Any, List, Optional, Self, Tuple
 
 from layrz_forms.types import ErrorType
 
@@ -16,7 +16,7 @@ class CharField(Field):
     max_length: Optional[int] = None,
     min_length: Optional[int] = None,
     empty: bool = False,
-    choices: Optional[List[str]] = None,
+    choices: Optional[Tuple[str, str]] = None,
   ) -> None:
     """
     CharField constructor
@@ -30,7 +30,7 @@ class CharField(Field):
     :param empty: Indicates if the field can be empty
     :type empty: bool
     :param choices: List of choices for the field
-    :type choices: Optional[List[str]]
+    :type choices: Optional[Tuple[str, str]]
     """
     super().__init__(required=required)
     self.max_length = max_length

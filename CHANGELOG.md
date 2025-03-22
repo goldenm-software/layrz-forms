@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1
+
+- Fixed typing of `choices` on `CharField`.
+
 ## 2.1.0
 
 - Migrated to use `ruff` and `mypy` for linting and type checking
