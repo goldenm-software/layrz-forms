@@ -133,7 +133,6 @@ class Form:
 
   def add_errors(
     self: Self,
-    *,
     key: str = '',
     code: str = '',
     extra_args: Optional[Dict[str, Any] | Callable[[Any], Any]] = None,
