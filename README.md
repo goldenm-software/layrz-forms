@@ -8,7 +8,7 @@ This project is a collection of tools that we use to make django developers life
 The idea is simple, replace the django forms to a more easier way to use them. Also provide the ability to return the errors key to support i18n.
 
 ```python
-import layrz.forms as forms
+import layrz_forms as forms
 
 
 class ExampleForm(forms.Form):
@@ -61,7 +61,7 @@ if __name__ == '__main__':
 Golden M is a software/hardware development company what is working on
 a new, innovative and disruptive technologies.
 
-For more information, contact us at [sales@goldenmcorp.com](mailto:sales@goldenmcorp.com)
+For more information, contact us at [sales@goldenm.com](mailto:sales@goldenm.com)
 
 ## License
 This project is under MIT License, for more information, check out the `LICENCE`

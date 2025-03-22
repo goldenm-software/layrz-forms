@@ -1,4 +1,6 @@
 """ Boolean field """
+from typing import Any
+
 from .base import Field
 
 
@@ -19,17 +21,17 @@ class NumberField(Field):
 
   def __init__(
     self,
-    required=False,
-    datatype=float,
-    min_value=None,
-    max_value=None,
-  ):
-    super(NumberField, self).__init__(required=required)
+    required: bool = False,
+    datatype: callable = float,
+    min_value: float = None,
+    max_value: float = None,
+  ) -> None:
+    super().__init__(required=required)
     self.datatype = datatype
     self.min_value = min_value
     self.max_value = max_value
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should be a int or float (Depending of the datatype)
@@ -43,7 +45,7 @@ class NumberField(Field):
         Dict of errors
     """
 
-    super(NumberField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, self.datatype) and (self.required and value is not None):
       self._append_error(key=key, errors=errors, to_add={'code': 'invalid'})

@@ -1,4 +1,6 @@
 """ Boolean field """
+from typing import Any
+
 from .base import Field
 
 
@@ -11,10 +13,10 @@ class BooleanField(Field):
       Indicates if the field is required or not
   """
 
-  def __init__(self, required=False):
-    super(BooleanField, self).__init__(required=required)
+  def __init__(self, required: bool = False) -> None:
+    super().__init__(required=required)
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should be a bool
@@ -28,7 +30,7 @@ class BooleanField(Field):
         Dict of errors
     """
 
-    super(BooleanField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, bool) and (self.required and value is not None):
       self._append_error(

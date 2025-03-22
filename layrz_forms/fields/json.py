@@ -1,4 +1,6 @@
 """ JSON Field """
+from typing import Any
+
 from .base import Field
 
 
@@ -17,15 +19,15 @@ class JsonField(Field):
 
   def __init__(
     self,
-    required=False,
-    empty=False,
-    datatype=dict,
-  ):
-    super(JsonField, self).__init__(required=required)
+    required: bool = False,
+    empty: bool = False,
+    datatype: callable = dict,
+  ) -> None:
+    super().__init__(required=required)
     self.empty = empty
     self.datatype = datatype
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should be a dict or list (Depending of the datatype)
@@ -42,7 +44,7 @@ class JsonField(Field):
         Dict of errors
     """
 
-    super(JsonField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if not isinstance(value, self.datatype):
       self._append_error(

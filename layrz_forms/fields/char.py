@@ -1,4 +1,6 @@
 """ Email field """
+from typing import Any
+
 from .base import Field
 
 
@@ -21,19 +23,19 @@ class CharField(Field):
 
   def __init__(
     self,
-    required=False,
-    max_length=None,
-    min_length=None,
-    empty=False,
-    choices=None,
-  ):
-    super(CharField, self).__init__(required=required)
+    required: bool = False,
+    max_length: int = None,
+    min_length: int = None,
+    empty: bool = False,
+    choices: list[str] = None,
+  ) -> None:
+    super().__init__(required=required)
     self.max_length = max_length
     self.min_length = min_length
     self.empty = empty
     self.choices = choices
 
-  def validate(self, key, value, errors):
+  def validate(self, key: str, value: Any, errors: dict) -> None:
     """
     Validate the field with the following rules:
     - Should not be empty if required
@@ -50,7 +52,7 @@ class CharField(Field):
         Dict of errors
     """
 
-    super(CharField, self).validate(key=key, value=value, errors=errors)
+    super().validate(key=key, value=value, errors=errors)
 
     if value is not None:
       if not self.empty:
