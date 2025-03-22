@@ -1,34 +1,36 @@
-""" ID field """
-from typing import Any
+"""ID field"""
+
+from typing import Any, Self
+
+from layrz_forms.types import ErrorType
 
 from .base import Field
 
 
 class IdField(Field):
-  """
-  IdField class for validation
-  ---
-  Attributes
-    required: bool
-      Indicates if the field is required or not
-  """
+  """ID Field"""
 
-  def __init__(self, required: bool = False) -> None:
+  def __init__(self: Self, required: bool = False) -> None:
+    """
+    IdField constructor
+
+    :param required: Indicates if the field is required or not
+    :type required: bool
+    """
     super().__init__(required=required)
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
     Validate the field with the following rules:
     - Should be a number or a string that can be converted to a number
     - The number should be greater than 0
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     super().validate(key=key, value=value, errors=errors)

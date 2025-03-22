@@ -1,11 +1,11 @@
-# Form tools - Layrz
-Managed by Golden M, Inc.
+# Layrz Forms
 
-## Motivation
-This project is a collection of tools that we use to make django developers life easier. I hope you find them useful too.
+[![PyPI](https://img.shields.io/pypi/v/layrz_forms.svg)](https://pypi.org/project/layrz-forms/)
+[![GitHub license](https://img.shields.io/github/license/goldenm-software/layrz-forms?logo=github)](https://github.com/goldenm-software/layrz-forms)
 
-## Usage
-The idea is simple, replace the django forms to a more easier way to use them. Also provide the ability to return the errors key to support i18n.
+A collection of tools that we use to make django developers life easier. I hope you find them useful too.
+
+Tired of complex forms validations? The default Django schema is too complex? Layrz Forms is for you! Works like Django Forms but with a simpler API and more features. Highly personalizable and extensible, you can use it in your projects without any problem.
 
 ```python
 import layrz_forms as forms
@@ -57,11 +57,30 @@ if __name__ == '__main__':
   #> form.errors(): {'rangeTextTest': [{'code': 'minLength', 'expected': 5, 'received': 4}], 'clean1': [{'code': 'error1'}, {'code': 'error2'}], 'clean2': [{'code': 'error1'}]}
 ```
 
-## Work with us
-Golden M is a software/hardware development company what is working on
-a new, innovative and disruptive technologies.
+## FAQ
 
-For more information, contact us at [sales@goldenm.com](mailto:sales@goldenm.com)
+### Do you have other libraries?
+
+Of course! We have multiple libraries (for Layrz or general purpose) that you can use in your projects, you can find us on [PyPi of Golden M](https://pypi.org/user/goldenm/) or [PyPi of Layrz](https://pypi.org/user/layrz-software/) for Python libraries, [RubyGems](https://rubygems.org/profiles/goldenm) for Ruby gems, [NPM of Golden M](https://www.npmjs.com/~goldenm) or [NPM of Layrz](https://www.npmjs.com/~layrz-software) for NodeJS libraries or here in [Pub.dev](https://pub.dev/publishers/goldenm.com/packages) for Dart/Flutter libraries.
+
+### I need to pay to use this package?
+
+**No!** This library is free and open source, you can use it in your projects without any cost, but if you want to support us, give us an star on our [Repository](https://github.com/goldenm-software/layrz-forms)!
+
+### Can I contribute to this package?
+
+**Yes!** We are open to contributions, feel free to open a pull request or an issue on the [Repository](https://github.com/goldenm-software/layrz-forms)!
+
+### I have a question, how can I contact you?
+
+If you need more assistance, you open an issue on the [Repository](https://github.com/goldenm-software/layrz-forms) and we're happy to help you :)
 
 ## License
-This project is under MIT License, for more information, check out the `LICENCE`
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+This project is maintained by [Golden M](https://goldenm.com) with authorization of [Layrz LTD](https://layrz.com).
+
+## Who are you? / Want to work with us?
+
+**Golden M** is a software and hardware development company what is working on a new, innovative and disruptive technologies. For more information, contact us at [sales@goldenm.com](mailto:sales@goldenm.com) or via WhatsApp at [+(507)-6979-3073](https://wa.me/50769793073?text="From%20layrz_theme%20flutter%20library.%20Hello").

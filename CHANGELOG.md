@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+- Migrated to use `ruff` and `mypy` for linting and type checking
+- Improvements on documentation to use PEP style
+
 ## 2.0.1
 
 - Removed namespace scan in `pyproject.toml` to avoid issues with other libraries

@@ -1,55 +1,57 @@
-""" Email field """
-from typing import Any
+"""Char field"""
+
+from typing import Any, List, Optional, Self
+
+from layrz_forms.types import ErrorType
 
 from .base import Field
 
 
 class CharField(Field):
-  """
-  CharField class for validation
-  ---
-  Attributes
-    required: bool
-      Indicates if the field is required or not
-    max_length: int
-      Indicates the maximum length of the field
-    min_length: int
-      Indicates the minimum length of the field
-    empty: bool
-      Indicates if the field can be empty or not
-    choices: tuple
-      Indicates the choices of the field
-  """
+  """Char Field"""
 
   def __init__(
-    self,
+    self: Self,
     required: bool = False,
-    max_length: int = None,
-    min_length: int = None,
+    max_length: Optional[int] = None,
+    min_length: Optional[int] = None,
     empty: bool = False,
-    choices: list[str] = None,
+    choices: Optional[List[str]] = None,
   ) -> None:
+    """
+    CharField constructor
+
+    :param required: Indicates if the field is required or not
+    :type required: bool
+    :param max_length: Maximum length of the field
+    :type max_length: Optional[int]
+    :param min_length: Minimum length of the field
+    :type min_length: Optional[int]
+    :param empty: Indicates if the field can be empty
+    :type empty: bool
+    :param choices: List of choices for the field
+    :type choices: Optional[List[str]]
+    """
     super().__init__(required=required)
     self.max_length = max_length
     self.min_length = min_length
     self.empty = empty
     self.choices = choices
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
     Validate the field with the following rules:
     - Should not be empty if required
     - Should be one of the choices indicated if choices is not None
     - Should be less than max_length if max_length is not None
     - Should be greater than min_length if min_length is not None
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     super().validate(key=key, value=value, errors=errors)

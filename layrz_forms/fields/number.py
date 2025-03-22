@@ -1,48 +1,50 @@
-""" Boolean field """
-from typing import Any
+"""Number field"""
+
+from typing import Any, Dict, List, Optional, Self, Type
+
+from layrz_forms.types import ErrorType
 
 from .base import Field
 
 
 class NumberField(Field):
-  """
-  NumberField class for validation
-  ---
-  Attributes
-    required: bool
-      Indicates if the field is required or not
-    datatype: (int, float)
-      Indicates the datatype of the field
-    min_value: int
-      Indicates the minimum value of the field
-    max_value: int
-      Indicates the maximum value of the field
-  """
+  """Number Field"""
 
   def __init__(
-    self,
+    self: Self,
     required: bool = False,
-    datatype: callable = float,
-    min_value: float = None,
-    max_value: float = None,
+    datatype: Type[int | float] = float,
+    min_value: Optional[float] = None,
+    max_value: Optional[float] = None,
   ) -> None:
+    """
+    NumberField constructor
+
+    :param required: Indicates if the field is required or not
+    :type required: bool
+    :param datatype: Type of the field
+    :type datatype: Type[int | float]
+    :param min_value: Minimum value of the field
+    :type min_value: Optional[float]
+    :param max_value: Maximum value of the field
+    :type max_value: Optional[float]
+    """
     super().__init__(required=required)
     self.datatype = datatype
     self.min_value = min_value
     self.max_value = max_value
 
-  def validate(self, key: str, value: Any, errors: dict) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
     Validate the field with the following rules:
     - Should be a int or float (Depending of the datatype)
-    ---
-    Arguments
-      key: str
-        Key of the field
-      value: any
-        Value to validate
-      errors: dict
-        Dict of errors
+
+    :param key: Key of the field
+    :type key: str
+    :param value: Value of the field
+    :type value: Any
+    :param errors: Errors dict
+    :type errors: ErrorType
     """
 
     super().validate(key=key, value=value, errors=errors)
