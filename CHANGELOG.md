@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4
+
+- Adjustments on all typings
+
 ## 2.1.3
 
 - Fixed again the `choices` typing on `CharField`

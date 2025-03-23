@@ -1,6 +1,6 @@
 """JSON Field"""
 
-from typing import Any, Dict, List, Self, Type
+from typing import Any, Self, Type
 
 from layrz_forms.types import ErrorType
 
@@ -14,7 +14,7 @@ class JsonField(Field):
     self: Self,
     required: bool = False,
     empty: bool = False,
-    datatype: Type[List[Any] | Dict[Any, Any]] = dict,
+    datatype: Type[list[Any] | dict[Any, Any]] = dict,
   ) -> None:
     """
     JsonField constructor
@@ -24,7 +24,7 @@ class JsonField(Field):
     :param empty: Indicates if the field can be empty
     :type empty: bool
     :param datatype: Type of the field
-    :type datatype: Type[List[Any] | Dict[Any, Any]]
+    :type datatype: Type[list[Any] | dict[Any, Any]]
     """
     super().__init__(required=required)
     self.empty = empty
