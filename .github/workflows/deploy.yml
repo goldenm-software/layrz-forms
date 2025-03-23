@@ -24,14 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Build
+      - name: Build and upload
         run: |
           uv venv --python 3.13
           uv sync --only-group dev
           uv run python -m build
-        
-      - name: Upload to Python Package Index
-        uses: pypa/gh-action-pypi-publish@v1.8.10
-        with:
-          user: ${{ secrets.LAYRZ_PYPI_USERNAME }}
-          password: ${{ secrets.LAYRZ_PYPI_PASSWORD }}
+          uv run python -m twine upload -u ${{ secrets.LAYRZ_PYPI_USERNAME }} -p ${{ secrets.LAYRZ_PYPI_PASSWORD }} dist/*
