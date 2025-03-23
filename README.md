@@ -77,7 +77,7 @@ If you need more assistance, you open an issue on the [Repository](https://githu
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/goldenm-software/layrz-forms/blob/main/LICENSE) file for details.
 
 This project is maintained by [Golden M](https://goldenm.com) with authorization of [Layrz LTD](https://layrz.com).
 

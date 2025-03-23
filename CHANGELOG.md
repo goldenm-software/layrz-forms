@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.4
+
+- Adjustments on all typings
+
+## 2.1.3
+
+- Fixed again the `choices` typing on `CharField`
+
+## 2.1.2
+
+- Removed forcing kwargs on `add_errors()` method
+
+## 2.1.1
+
+- Fixed typing of `choices` on `CharField`.
+
 ## 2.1.0
 
 - Migrated to use `ruff` and `mypy` for linting and type checking

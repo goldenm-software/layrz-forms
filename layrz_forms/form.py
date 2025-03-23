@@ -1,12 +1,13 @@
 """Form class"""
 
 import inspect
-from typing import Any, Callable, Dict, List, Optional, Self, Tuple, TypeAlias, cast
+from collections.abc import Callable
+from typing import Any, Optional, Self, TypeAlias, cast
 
 from layrz_forms.fields import Field
 from layrz_forms.types import ErrorType
 
-DataObjType: TypeAlias = Dict[str, Any]
+DataObjType: TypeAlias = dict[str, Any]
 
 
 class Form:
@@ -14,10 +15,10 @@ class Form:
 
   _obj: DataObjType = {}
   _errors: ErrorType = {}
-  _clean_functions: List[str] = []
-  _attributes: Dict[str, Any] = {}
-  _nested_attrs: Dict[str, List[Self | Field]] = {}
-  _sub_forms_attrs: Dict[str, Self] = {}
+  _clean_functions: list[str] = []
+  _attributes: dict[str, Any] = {}
+  _nested_attrs: dict[str, list[Self | Field]] = {}
+  _sub_forms_attrs: dict[str, Self] = {}
 
   def __init__(self: Self, obj: Optional[DataObjType] = None) -> None:
     """
@@ -133,10 +134,9 @@ class Form:
 
   def add_errors(
     self: Self,
-    *,
     key: str = '',
     code: str = '',
-    extra_args: Optional[Dict[str, Any] | Callable[[Any], Any]] = None,
+    extra_args: Optional[dict[str, Any] | Callable[[Any], Any]] = None,
   ) -> None:
     """Add custom errors
     This function is designed to be used in a clean function
@@ -167,7 +167,7 @@ class Form:
 
     self._errors[camel_key].append(new_error)
 
-  def _validate_field(self: Self, *, field: Tuple[str, Field], new_key: Optional[str] = None) -> None:
+  def _validate_field(self: Self, *, field: tuple[str, Field], new_key: Optional[str] = None) -> None:
     """
     Validate field
 
@@ -285,7 +285,7 @@ class Form:
           )
 
   @property
-  def _reserved_words(self: Self) -> Tuple[str, ...]:
+  def _reserved_words(self: Self) -> tuple[str, ...]:
     """Reserved words"""
     return (
       'add_errors',

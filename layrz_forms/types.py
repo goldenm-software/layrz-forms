@@ -1,5 +1,5 @@
 """Layrz Forms Types"""
 
-from typing import Any, Dict, TypeAlias
+from typing import Any, TypeAlias
 
-ErrorType: TypeAlias = Dict[str, Any]
+ErrorType: TypeAlias = dict[str, Any]

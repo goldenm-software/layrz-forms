@@ -1,6 +1,6 @@
 """Number field"""
 
-from typing import Any, Dict, List, Optional, Self, Type
+from typing import Any, Optional, Self
 
 from layrz_forms.types import ErrorType
 
@@ -13,7 +13,7 @@ class NumberField(Field):
   def __init__(
     self: Self,
     required: bool = False,
-    datatype: Type[int | float] = float,
+    datatype: type[int | float] = float,
     min_value: Optional[float] = None,
     max_value: Optional[float] = None,
   ) -> None:
