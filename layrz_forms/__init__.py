@@ -1,7 +1,7 @@
 """Layrz Forms"""
 
 from . import types
-from .fields import BooleanField, CharField, EmailField, IdField, JsonField, NumberField
+from .fields import BooleanField, CharField, EmailField, IdField, JsonField, NumberField, UuidField
 from .form import Form
 
 __all__ = [
@@ -12,5 +12,6 @@ __all__ = [
   'IdField',
   'JsonField',
   'NumberField',
+  'UuidField',
   'types',
 ]
