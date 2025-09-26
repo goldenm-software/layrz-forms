@@ -296,7 +296,7 @@ wheels = [
 
 [[package]]
 name = "layrz-forms"
-version = "2.1.4"
+version = "2.1.5"
 source = { editable = "." }
 
 [package.dev-dependencies]

@@ -16,6 +16,7 @@ from .id import IdField
 from .json import JsonField
 from .number import NumberField
 from .uuid import UuidField
+
 __all__ = [
   'Field',
   'BooleanField',

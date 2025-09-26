@@ -1,11 +1,12 @@
 """UUID field"""
 
+import uuid
 from typing import Any, Self
 
 from layrz_forms.types import ErrorType
 
 from .base import Field
-import uuid
+
 
 class UuidField(Field):
   """UUID Field"""
@@ -34,10 +35,10 @@ class UuidField(Field):
     """
 
     super().validate(key=key, value=value, errors=errors)
-    
+
     if value is None and not self.required:
       return
-    
+
     # Validate the value is a str or a UUID class
     if not isinstance(value, (str, uuid.UUID)):
       self._append_error(
@@ -46,11 +47,9 @@ class UuidField(Field):
         to_add={'code': 'invalid'},
       )
       return
-    
     # If it's already a UUID instance, it's valid
     if isinstance(value, uuid.UUID):
       return
-      
     # If it's a string, validate UUID format
     try:
       uuid.UUID(value)
