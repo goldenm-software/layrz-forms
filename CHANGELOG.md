@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.4.6
+
+- Added support for async clean functions in forms
+
 ## 2.1.4
 
 - Adjustments on all typings

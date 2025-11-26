@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -296,7 +296,7 @@ wheels = [
 
 [[package]]
 name = "layrz-forms"
-version = "2.1.5"
+version = "2.1.6"
 source = { editable = "." }
 
 [package.dev-dependencies]
