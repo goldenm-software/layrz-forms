@@ -1,5 +1,6 @@
 """Form class"""
 
+import asyncio
 import inspect
 from collections.abc import Callable
 from typing import Any, Optional, Self, TypeAlias, cast
@@ -94,6 +95,40 @@ class Form:
     """
     self._obj = obj
 
+  async def is_valid_async(self: Self) -> bool:
+    """
+    Returns if the form is valid asynchronously
+
+    :return: True if the form is valid, False otherwise
+    :rtype: bool
+    """
+    self._errors = {}
+
+    for field in self._attributes.items():
+      self._validate_field(field=field)
+
+    for attr, form in self._sub_forms_attrs.items():
+      self._validate_sub_form(
+        field=attr,
+        form=form,
+        data=self._obj.get(attr, {}),
+      )
+
+    for nattr, nform in self._nested_attrs.items():
+      if isinstance(nform[0], Field):
+        self._validate_sub_form(
+          field=nattr,
+          form=nform[0],  # type: ignore[arg-type]
+          data=self._obj.get(nattr, {}),
+        )
+      else:
+        self._validate_sub_form_as_list(field=nattr, form=nform[0])
+
+    for func in self._clean_functions:
+      await self._clean_async(clean_func=func)
+
+    return len(self._errors) == 0
+  
   def is_valid(self: Self) -> bool:
     """
     Returns if the form is valid
@@ -124,7 +159,7 @@ class Form:
         self._validate_sub_form_as_list(field=nattr, form=nform[0])
 
     for func in self._clean_functions:
-      self._clean(clean_func=func)
+      self._clean_sync(clean_func=func)
 
     return len(self._errors) == 0
 
@@ -152,7 +187,7 @@ class Form:
       extra_args = {}
 
     if key == '' or code == '':
-      raise Exception('key and code are required')  # pylint: disable=W0719
+      raise RuntimeError('key and code are required')
     camel_key = self._convert_to_camel(key=key)
 
     if camel_key not in self._errors:
@@ -187,7 +222,7 @@ class Form:
         valid_params = ['key', 'value', 'errors']
 
         if len(params) != len(valid_params):
-          raise Exception(f'{type(field[1])} validate method has no the correct parameters')  # pylint: disable=W0719
+          raise RuntimeError(f'{type(field[1])} validate method has no the correct parameters')
 
         is_valid = False
         for param in params:
@@ -198,7 +233,7 @@ class Form:
           break
 
         if not is_valid:
-          raise Exception(  # pylint: disable=W0719
+          raise RuntimeError(
             f'{field[0]} of type {type(field[1]).__name__} validate method has no the correct '
             + f'parameters. Expected parameters: {", ".join(valid_params)}. '
             + f'Actual parameters: {", ".join(params)}'
@@ -210,13 +245,24 @@ class Form:
           errors=self._errors,
         )
       else:
-        raise Exception(f'{type(field[1])} has no validate method')  # pylint: disable=W0719
+        raise RuntimeError(f'{type(field[1])} has no validate method')
 
-  def _clean(self: Self, clean_func: str) -> None:
+  def _clean_sync(self: Self, clean_func: str) -> None:
     """Clean function"""
     func = getattr(self, clean_func)
     if callable(func):
-      func()
+      if asyncio.iscoroutinefunction(func):
+        raise RuntimeError('Cannot call async clean function in sync context', 'please use is_valid_async method')
+  
+  async def _clean_async(self: Self, clean_func: str) -> None:
+    """Clean function async"""
+    func = getattr(self, clean_func)
+    if callable(func):
+      if asyncio.iscoroutinefunction(func):
+        await func()
+      else:
+        await asyncio.sleep(0) # This is to ensure the function is awaitable
+        func()
 
   def _convert_to_camel(self: Self, *, key: str) -> str:
     """
@@ -293,6 +339,7 @@ class Form:
       'clean',
       'errors',
       'is_valid',
+      'is_valid_async',
       'set_obj',
       'calculate_members',
       'cleaned_data',
