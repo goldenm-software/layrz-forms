@@ -1,6 +1,10 @@
 # Changelog
 
-## 2.4.6
+## 2.1.7
+
+- Fixed char field validation to accept Enum and StrEnum types
+
+## 2.1.6
 
 - Added support for async clean functions in forms
 

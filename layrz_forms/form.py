@@ -128,7 +128,7 @@ class Form:
       await self._clean_async(clean_func=func)
 
     return len(self._errors) == 0
-  
+
   def is_valid(self: Self) -> bool:
     """
     Returns if the form is valid
@@ -253,7 +253,7 @@ class Form:
     if callable(func):
       if asyncio.iscoroutinefunction(func):
         raise RuntimeError('Cannot call async clean function in sync context', 'please use is_valid_async method')
-  
+
   async def _clean_async(self: Self, clean_func: str) -> None:
     """Clean function async"""
     func = getattr(self, clean_func)
@@ -261,7 +261,7 @@ class Form:
       if asyncio.iscoroutinefunction(func):
         await func()
       else:
-        await asyncio.sleep(0) # This is to ensure the function is awaitable
+        await asyncio.sleep(0)  # This is to ensure the function is awaitable
         func()
 
   def _convert_to_camel(self: Self, *, key: str) -> str:
