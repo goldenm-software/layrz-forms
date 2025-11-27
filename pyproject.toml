@@ -14,7 +14,7 @@ maintainers = [
 
 readme = "README.md"
 
-license = {text = "MIT License"}
+license = "MIT"
 
 keywords = [
   "sdk",
