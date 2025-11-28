@@ -1,6 +1,6 @@
 [project]
 name = "layrz-forms"
-version = "2.1.7"
+version = "2.1.8"
 description = "Layrz forms and tools for Python"
 authors = [
   {name = "Golden M, Inc.", email = "software@goldenm.com"}
@@ -29,6 +29,9 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "strawberry-graphql>=0.287.0",
 ]
 
 [project.urls]

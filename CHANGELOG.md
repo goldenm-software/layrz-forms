@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.8
+
+- Added support for strawberry objects in forms
+
 ## 2.1.7
 
 - Fixed char field validation to accept Enum and StrEnum types
