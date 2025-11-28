@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.9
+
+- Exposed a method to convert strawberry objects to dicts
+
 ## 2.1.8
 
 - Added support for strawberry objects in forms

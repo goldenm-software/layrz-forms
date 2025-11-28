@@ -11,18 +11,32 @@ from strawberry.types import get_object_definition, has_object_definition
 from layrz_forms.fields import Field
 from layrz_forms.types import ErrorType
 
-DataObjType: TypeAlias = dict[str, Any]
-
 
 class Form:
   """Form class"""
 
-  _obj: DataObjType = {}
+  _obj: dict[str, Any] = {}
   _errors: ErrorType = {}
   _clean_functions: list[str] = []
   _attributes: dict[str, Any] = {}
   _nested_attrs: dict[str, list[Self | Field]] = {}
   _sub_forms_attrs: dict[str, Self] = {}
+
+  @staticmethod
+  def strawberry_to_dict(obj: object) -> dict[str, Any]:
+    """
+    Convert a strawberry object to a dictionary
+
+    :param obj: Strawberry object
+    :return: Dictionary representation of the object
+    """
+    data = {}
+    definitions = get_object_definition(obj)
+    if definitions:
+      for f in definitions.fields:
+        name = f.graphql_name or f.name
+        data[name] = getattr(obj, f.name)
+    return data
 
   def __init__(self: Self, obj: object | None = None) -> None:
     """
@@ -32,22 +46,16 @@ class Form:
     """
 
     if isinstance(obj, dict):
-      self.obj = cast(DataObjType, obj)
+      self.obj = cast(dict[str, Any], obj)
     elif obj is not None and has_object_definition(obj):
-      data = {}
-      definitions = get_object_definition(obj)
-      if definitions:
-        for f in definitions.fields:
-          name = f.graphql_name or f.name
-          data[name] = getattr(obj, f.name)
-      self.obj = data
+      self.obj = self.strawberry_to_dict(obj=obj)
     else:
       self.obj = {}
 
     self.calculate_members()
 
   @property
-  def cleaned_data(self: Self) -> DataObjType:
+  def cleaned_data(self: Self) -> dict[str, Any]:
     """
     Returns the cleaned data
 
@@ -86,7 +94,7 @@ class Form:
         continue
 
   @property
-  def obj(self: Self) -> DataObjType:
+  def obj(self: Self) -> dict[str, Any]:
     """
     Returns the object
 
@@ -95,7 +103,7 @@ class Form:
     return self._obj
 
   @obj.setter
-  def obj(self: Self, obj: DataObjType) -> None:
+  def obj(self: Self, obj: dict[str, Any]) -> None:
     """
     Set the object
 
@@ -276,7 +284,7 @@ class Form:
 
     return '.'.join(field_final)
 
-  def _validate_sub_form(self: Self, *, field: str, form: Self | Field, data: DataObjType) -> None:
+  def _validate_sub_form(self: Self, *, field: str, form: Self | Field, data: dict[str, Any]) -> None:
     """Validate sub form"""
     if not isinstance(form, Form):
       return

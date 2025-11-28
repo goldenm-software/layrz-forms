@@ -305,7 +305,7 @@ wheels = [
 
 [[package]]
 name = "layrz-forms"
-version = "2.1.8"
+version = "2.1.9"
 source = { editable = "." }
 dependencies = [
     { name = "strawberry-graphql" },
