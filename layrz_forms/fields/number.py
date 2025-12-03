@@ -82,3 +82,10 @@ class NumberField(Field):
             errors=errors,
             to_add={'code': 'invalid'},
           )
+      except TypeError:
+        if self.required:
+          self._append_error(
+            key=key,
+            errors=errors,
+            to_add={'code': 'invalid'},
+          )

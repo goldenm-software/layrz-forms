@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.10
+
+- Add `TypeError` to `NumberField`
+
 ## 2.1.9
 
 - Exposed a method to convert strawberry objects to dicts
