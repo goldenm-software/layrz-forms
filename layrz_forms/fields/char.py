@@ -1,6 +1,7 @@
 """Char field"""
 
-from typing import Any, Optional, Self
+from enum import Enum, StrEnum
+from typing import Any, Self
 
 from layrz_forms.types import ErrorType
 
@@ -13,10 +14,10 @@ class CharField(Field):
   def __init__(
     self: Self,
     required: bool = False,
-    max_length: Optional[int] = None,
-    min_length: Optional[int] = None,
+    max_length: int | None = None,
+    min_length: int | None = None,
     empty: bool = False,
-    choices: Optional[tuple[tuple[str, str], ...]] = None,
+    choices: tuple[tuple[str, str], ...] | None = None,
   ) -> None:
     """
     CharField constructor
@@ -57,6 +58,11 @@ class CharField(Field):
     super().validate(key=key, value=value, errors=errors)
 
     if value is not None:
+      if isinstance(value, Enum):
+        value = value.name
+      elif isinstance(value, StrEnum):
+        value = value.value
+
       if not self.empty:
         if len(value) == 0:
           self._append_error(

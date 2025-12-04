@@ -1,6 +1,22 @@
 # Changelog
 
-## 2.4.6
+## 2.1.10
+
+- Add `TypeError` to `NumberField`
+
+## 2.1.9
+
+- Exposed a method to convert strawberry objects to dicts
+
+## 2.1.8
+
+- Added support for strawberry objects in forms
+
+## 2.1.7
+
+- Fixed char field validation to accept Enum and StrEnum types
+
+## 2.1.6
 
 - Added support for async clean functions in forms
 

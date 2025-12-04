@@ -3,45 +3,63 @@
 import asyncio
 import inspect
 from collections.abc import Callable
-from typing import Any, Optional, Self, TypeAlias, cast
+from typing import Any, Self, TypeAlias, cast
+
+import strawberry
+from strawberry.types import get_object_definition, has_object_definition
 
 from layrz_forms.fields import Field
 from layrz_forms.types import ErrorType
-
-DataObjType: TypeAlias = dict[str, Any]
 
 
 class Form:
   """Form class"""
 
-  _obj: DataObjType = {}
+  _obj: dict[str, Any] = {}
   _errors: ErrorType = {}
   _clean_functions: list[str] = []
   _attributes: dict[str, Any] = {}
   _nested_attrs: dict[str, list[Self | Field]] = {}
   _sub_forms_attrs: dict[str, Self] = {}
 
-  def __init__(self: Self, obj: Optional[DataObjType] = None) -> None:
+  @staticmethod
+  def strawberry_to_dict(obj: object) -> dict[str, Any]:
+    """
+    Convert a strawberry object to a dictionary
+
+    :param obj: Strawberry object
+    :return: Dictionary representation of the object
+    """
+    data = {}
+    definitions = get_object_definition(obj)
+    if definitions:
+      for f in definitions.fields:
+        name = f.graphql_name or f.name
+        data[name] = getattr(obj, f.name)
+    return data
+
+  def __init__(self: Self, obj: object | None = None) -> None:
     """
     Form constructor
 
     :param obj: Object to validate
-    :type obj: Optional[DataObjType]
     """
 
-    if obj is None:
-      obj = {}
-    self._obj = obj
+    if isinstance(obj, dict):
+      self.obj = cast(dict[str, Any], obj)
+    elif obj is not None and has_object_definition(obj):
+      self.obj = self.strawberry_to_dict(obj=obj)
+    else:
+      self.obj = {}
 
     self.calculate_members()
 
   @property
-  def cleaned_data(self: Self) -> DataObjType:
+  def cleaned_data(self: Self) -> dict[str, Any]:
     """
     Returns the cleaned data
 
     :return: Cleaned data
-    :rtype: DataObjType
     """
     return self._obj
 
@@ -72,26 +90,24 @@ class Form:
         continue
 
       if isinstance(item[1], Form):
-        self._sub_forms_attrs[item[0]] = cast(Self, item[1])
+        self._sub_forms_attrs[item[0]] = cast(Self, item[1])  # type: ignore
         continue
 
   @property
-  def obj(self: Self) -> DataObjType:
+  def obj(self: Self) -> dict[str, Any]:
     """
     Returns the object
 
     :return: Object
-    :rtype: DataObjType
     """
     return self._obj
 
   @obj.setter
-  def obj(self: Self, obj: DataObjType) -> None:
+  def obj(self: Self, obj: dict[str, Any]) -> None:
     """
     Set the object
 
     :param obj: Object to validate
-    :type obj: DataObjType
     """
     self._obj = obj
 
@@ -100,7 +116,6 @@ class Form:
     Returns if the form is valid asynchronously
 
     :return: True if the form is valid, False otherwise
-    :rtype: bool
     """
     self._errors = {}
 
@@ -110,7 +125,7 @@ class Form:
     for attr, form in self._sub_forms_attrs.items():
       self._validate_sub_form(
         field=attr,
-        form=form,
+        form=form,  # type: ignore
         data=self._obj.get(attr, {}),
       )
 
@@ -122,19 +137,18 @@ class Form:
           data=self._obj.get(nattr, {}),
         )
       else:
-        self._validate_sub_form_as_list(field=nattr, form=nform[0])
+        self._validate_sub_form_as_list(field=nattr, form=nform[0])  # type: ignore
 
     for func in self._clean_functions:
       await self._clean_async(clean_func=func)
 
     return len(self._errors) == 0
-  
+
   def is_valid(self: Self) -> bool:
     """
     Returns if the form is valid
 
     :return: True if the form is valid, False otherwise
-    :rtype: bool
     """
     self._errors = {}
 
@@ -144,7 +158,7 @@ class Form:
     for attr, form in self._sub_forms_attrs.items():
       self._validate_sub_form(
         field=attr,
-        form=form,
+        form=form,  # type: ignore
         data=self._obj.get(attr, {}),
       )
 
@@ -156,7 +170,7 @@ class Form:
           data=self._obj.get(nattr, {}),
         )
       else:
-        self._validate_sub_form_as_list(field=nattr, form=nform[0])
+        self._validate_sub_form_as_list(field=nattr, form=nform[0])  # type: ignore
 
     for func in self._clean_functions:
       self._clean_sync(clean_func=func)
@@ -171,17 +185,15 @@ class Form:
     self: Self,
     key: str = '',
     code: str = '',
-    extra_args: Optional[dict[str, Any] | Callable[[Any], Any]] = None,
+    extra_args: dict[str, Any] | Callable[[Any], Any] | None = None,
   ) -> None:
-    """Add custom errors
+    """
+    Add custom errors
     This function is designed to be used in a clean function
 
     :param key: Key of the field
-    :type key: str
     :param code: Error code
-    :type code: str
     :param extra_args: Extra arguments to add to the error
-    :type extra_args: Optional[Dict[str, Any]]
     """
     if extra_args is None:
       extra_args = {}
@@ -198,21 +210,16 @@ class Form:
       if callable(extra_args):
         new_error.update(extra_args())
       else:
-        new_error.update(extra_args)
+        new_error.update(extra_args)  # type: ignore
 
     self._errors[camel_key].append(new_error)
 
-  def _validate_field(self: Self, *, field: tuple[str, Field], new_key: Optional[str] = None) -> None:
+  def _validate_field(self: Self, *, field: tuple[str, Field], new_key: str | None = None) -> None:
     """
     Validate field
 
     :param field: Field to validate
-    :type field: Tuple[str, ...]
     :param new_key: New key to use for the field
-    :type new_key: Optional[str]
-
-    :return: None
-    :rtype: None
     """
     if isinstance(field[1], Field):
       func = field[1].validate
@@ -253,7 +260,7 @@ class Form:
     if callable(func):
       if asyncio.iscoroutinefunction(func):
         raise RuntimeError('Cannot call async clean function in sync context', 'please use is_valid_async method')
-  
+
   async def _clean_async(self: Self, clean_func: str) -> None:
     """Clean function async"""
     func = getattr(self, clean_func)
@@ -261,13 +268,11 @@ class Form:
       if asyncio.iscoroutinefunction(func):
         await func()
       else:
-        await asyncio.sleep(0) # This is to ensure the function is awaitable
+        await asyncio.sleep(0)  # This is to ensure the function is awaitable
         func()
 
   def _convert_to_camel(self: Self, *, key: str) -> str:
-    """
-    Convert the key to camel case
-    """
+    """Convert the key to camel case"""
     init, *temp = key.split('_')
 
     field = ''.join([init, *map(str.title, temp)])
@@ -279,7 +284,7 @@ class Form:
 
     return '.'.join(field_final)
 
-  def _validate_sub_form(self: Self, *, field: str, form: Self | Field, data: DataObjType) -> None:
+  def _validate_sub_form(self: Self, *, field: str, form: Self | Field, data: dict[str, Any]) -> None:
     """Validate sub form"""
     if not isinstance(form, Form):
       return
@@ -307,12 +312,7 @@ class Form:
     Validate sub form for list
 
     :param field: Field name
-    :type field: str
     :param form: Form to validate
-    :type form: Any
-
-    :return: None
-    :rtype: None
     """
     list_obj = self._obj.get(field, [])
 
