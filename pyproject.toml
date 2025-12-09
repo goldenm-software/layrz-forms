@@ -1,38 +1,27 @@
 [project]
 name = "layrz-forms"
-version = "2.1.10"
+version = "2.1.11"
 description = "Layrz forms and tools for Python"
-authors = [
-  {name = "Golden M, Inc.", email = "software@goldenm.com"}
-]
+authors = [{ name = "Golden M, Inc.", email = "software@goldenm.com" }]
 requires-python = ">=3.11"
 
 maintainers = [
-  {name = "Kenny Mochizuki", email = "kenny@goldenm.com"},
-  {name = "Miguel Zauzich", email = "miguel@goldenm.com"},
+  { name = "Kenny Mochizuki", email = "kenny@goldenm.com" },
+  { name = "Miguel Zauzich", email = "miguel@goldenm.com" },
 ]
 
 readme = "README.md"
 
 license = "MIT"
 
-keywords = [
-  "sdk",
-  "goldenm",
-  "layrz",
-  "django forms",
-  "django",
-  "forms"
-]
+keywords = ["sdk", "goldenm", "layrz", "django forms", "django", "forms"]
 classifiers = [
   "Programming Language :: Python :: 3",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
 ]
-dependencies = [
-    "strawberry-graphql>=0.287.0",
-]
+dependencies = ["strawberry-graphql>=0.287.0"]
 
 [project.urls]
 Repository = "https://github.com/goldenm-software/layrz-forms"
@@ -56,25 +45,24 @@ dev = [
 indent-width = 2
 line-length = 120
 
-exclude = [
-  ".venv",
-]
+exclude = [".venv"]
 
 [tool.ruff.lint]
 ignore = [
-  "F401", # Unused import
-  "E701", # Multiple statements on one line
-  "TD003", # Missing issue link
+  "F401",   # Unused import
+  "E701",   # Multiple statements on one line
+  "TD003",  # Missing issue link
   "ANN401", # Any type annotation
 ]
 
 select = [
-  "I", # isort
-  "E", "W", # pycodestyle
-  "F", # pyflakes
-  "B", # flakes8-bugbear
-  "TD", # flake8-todo
-  "DJ", # flake8-django
+  "I",   # isort
+  "E",
+  "W",   # pycodestyle
+  "F",   # pyflakes
+  "B",   # flakes8-bugbear
+  "TD",  # flake8-todo
+  "DJ",  # flake8-django
   "DTZ", # flake8-datetimez
   "T20", # flake8-print # En un futuro
   "PYI", # flake8-pyi
