@@ -259,7 +259,12 @@ class Form:
     func = getattr(self, clean_func)
     if callable(func):
       if asyncio.iscoroutinefunction(func):
-        raise RuntimeError('Cannot call async clean function in sync context', 'please use is_valid_async method')
+        raise RuntimeError(
+          'Cannot call async clean function in sync context',
+          'please use is_valid_async method',
+        )
+      # It is sync call it
+      func()
 
   async def _clean_async(self: Self, clean_func: str) -> None:
     """Clean function async"""
