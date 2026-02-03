@@ -1,5 +1,6 @@
 """Char field"""
 
+import re
 from enum import Enum, StrEnum
 from typing import Any, Self
 
@@ -17,6 +18,7 @@ class CharField(Field):
     max_length: int | None = None,
     min_length: int | None = None,
     empty: bool = False,
+    regex: str | None = None,
     choices: tuple[tuple[str, str], ...] | None = None,
   ) -> None:
     """
@@ -38,6 +40,7 @@ class CharField(Field):
     self.min_length = min_length
     self.empty = empty
     self.choices = choices
+    self.regex = regex
 
   def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
     """
@@ -46,6 +49,7 @@ class CharField(Field):
     - Should be one of the choices indicated if choices is not None
     - Should be less than max_length if max_length is not None
     - Should be greater than min_length if min_length is not None
+    - Should match the regex if regex is not None
 
     :param key: Key of the field
     :type key: str
@@ -104,6 +108,18 @@ class CharField(Field):
             to_add={
               'code': 'invalidChoice',
               'expected': mapped_choices,
+              'received': value,
+            },
+          )
+
+      if self.regex is not None:
+        if not re.match(self.regex, value):
+          self._append_error(
+            key=key,
+            errors=errors,
+            to_add={
+              'code': 'invalidFormat',
+              'expected': self.regex,
               'received': value,
             },
           )
