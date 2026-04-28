@@ -37,16 +37,12 @@ class Field:
     :return: Key in camel case
     :rtype: str
     """
-    init, *temp = key.split('_')
-
-    field = ''.join([init, *map(str.title, temp)])
-    field_items = field.split('.')
-
-    field_final = []
-    for item in field_items:
-      field_final.append(''.join([item[0].lower(), item[1:]]))
-
-    return '.'.join(field_final)
+    result = []
+    for segment in key.split('.'):
+      init, *temp = segment.split('_')
+      camel = ''.join([init, *map(str.title, temp)])
+      result.append(''.join([camel[0].lower(), camel[1:]]) if camel else camel)
+    return '.'.join(result)
 
   def _append_error(self: Self, key: str, errors: ErrorType, to_add: ErrorType) -> None:
     """

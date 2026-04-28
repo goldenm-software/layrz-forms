@@ -278,16 +278,12 @@ class Form:
 
   def _convert_to_camel(self: Self, *, key: str) -> str:
     """Convert the key to camel case"""
-    init, *temp = key.split('_')
-
-    field = ''.join([init, *map(str.title, temp)])
-    field_items = field.split('.')
-
-    field_final = []
-    for item in field_items:
-      field_final.append(''.join([item[0].lower(), item[1:]]))
-
-    return '.'.join(field_final)
+    result = []
+    for segment in key.split('.'):
+      init, *temp = segment.split('_')
+      camel = ''.join([init, *map(str.title, temp)])
+      result.append(''.join([camel[0].lower(), camel[1:]]) if camel else camel)
+    return '.'.join(result)
 
   def _validate_sub_form(self: Self, *, field: str, form: Self | Field, data: dict[str, Any]) -> None:
     """Validate sub form"""
