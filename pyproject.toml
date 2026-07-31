@@ -39,6 +39,7 @@ dev = [
   "python-dotenv>=1.0.1",
   "ruff>=0.9.8",
   "twine>=6.1.0",
+  "ty>=0.0.65",
 ]
 
 [tool.ruff]
