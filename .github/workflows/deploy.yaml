@@ -79,7 +79,7 @@ jobs:
 
       - name: Generate changelog
         id: changelog
-        uses: goldenm-software/layrz-ci-workflows/.github/actions/changelog@v1
+        uses: goldenm-software/layrz-actions/.github/actions/changelog@v1
         with:
           post-comment: false
           exclude-types: 'chore,style'
@@ -97,7 +97,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: Release ${{ github.ref_name }}
           body: ${{ steps.changelog.outputs.changelog }}

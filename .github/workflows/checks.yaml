@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: goldenm-software/layrz-ci-workflows/.github/actions/check-python@v1
+      - uses: goldenm-software/layrz-actions/.github/actions/check-python@v1
 
   changelog:
     runs-on: ubuntu-latest
@@ -20,7 +20,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: goldenm-software/layrz-ci-workflows/.github/actions/changelog@v1
+      - uses: goldenm-software/layrz-actions/.github/actions/changelog@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           post-comment: true
