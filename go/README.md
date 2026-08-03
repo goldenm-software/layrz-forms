@@ -172,14 +172,39 @@ type User struct {
 
 ## Field Types & Validators
 
+### Pointer vs. Value Fields
+
+Scalar fields can be declared as either a **pointer** (models absence as nil) or a **value** (always present). This distinction is essential for GraphQL integration with `graph-gophers/graphql-go`, which requires non-null (`!`) fields to be non-pointer.
+
+**Pointer fields** (`*T`): The `required` rule checks for nil. Nil is treated as absent.
+**Value fields** (`T`): Always present, so `required` never fires. The field's zero value is treated as a real, present value.
+
+Example:
+```go
+type User struct {
+	// Non-null in GraphQL (String!)
+	Name  string  `layrz:"char,required"`
+	Email string  `layrz:"email,required"`
+
+	// Nullable in GraphQL (String)
+	Bio *string `layrz:"char,empty"`
+}
+
+// Both Name and Email are always present (required never fires).
+// Name="" with required triggers "empty" error (if empty=false).
+// Bio=nil is treated as absent (required fires if required=true).
+// Bio="" is treated as present (required does not fire).
+```
+
 ### ID Field (`id`)
 Validates positive integers. Accepts:
-- Go integers: `int`, `int8`–`int64`
-- Strings parseable as positive integers
+- Go integers: `int`, `int8`–`int64` (value or pointer)
+- Strings (value or pointer) parseable as positive integers
 - Rejects: floats, negative numbers, zero, non-numeric strings, booleans
 
 ### Email Field (`email`)
 Validates email addresses against a regex pattern. Empty strings rejected unless `empty:true`.
+- Accepts: `string` or `*string` (value or pointer)
 - Default regex: `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,63}$`
 - Custom regex via `regex=<pattern>`
 
@@ -189,9 +214,11 @@ Validates UUID in any of these formats:
 - Unhyphenated: 32 hex characters
 - Braced: `{8-4-4-4-12}` or `{32-hex}`
 - URN prefix: `urn:uuid:8-4-4-4-12`
+- Accepts: `string` or `*string` (value or pointer)
 
 ### Char Field (`char`)
 Validates strings. Length is measured in UTF-8 rune count, not bytes.
+- Accepts: `string` or `*string` (value or pointer)
 - `min_length=<int>` enforces minimum rune count
 - `max_length=<int>` enforces maximum rune count
 - `regex=<pattern>` validates against a regex
@@ -200,20 +227,22 @@ Validates strings. Length is measured in UTF-8 rune count, not bytes.
 
 ### Number Field (`number`)
 Validates numeric values. Requires `datatype=int` or `datatype=float`:
-- `int`: Accepts `*int`, `*int8`–`*int64`; rejects floats
-- `float`: Accepts `*float32`, `*float64`; rejects ints
+- `int`: Accepts `int`, `int8`–`int64` (value or pointer); rejects floats
+- `float`: Accepts `float32`, `float64` (value or pointer); rejects ints
 - `min_value=<float>` and `max_value=<float>` enforce bounds
 - Rejects booleans (Go differs from Python here)
 
 ### Bool Field (`bool`)
-Validates boolean values. Simply checks that the value is a `*bool`.
+Validates boolean values. Simply checks that the value is a valid bool.
+- Accepts: `bool` or `*bool` (value or pointer)
 
 ### JSON Field (`json`)
 Validates JSON objects (dicts) or arrays (lists). Requires `datatype=list` or `datatype=dict`:
-- `list`: Accepts `*[]T`, rejects maps
-- `dict`: Accepts `*map[K]V`, rejects slices
+- `list`: Accepts `[]T` or `*[]T` (value or pointer); rejects maps
+- `dict`: Accepts `map[K]V` or `*map[K]V` (value or pointer); rejects slices
 - `empty:true` allows empty containers
 - `datatype` is inferred from the Go type if not specified
+- A nil slice/map in a value field is treated as present but empty (not absent)
 
 ### Subform (`subform`)
 Validates a nested struct. Must be a non-nil pointer to a struct. Nil subforms are **skipped** (divergent from Python, which validates against an empty dict).
