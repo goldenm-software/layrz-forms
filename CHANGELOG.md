@@ -24,6 +24,18 @@
 
 - 49 uncaught exceptions across 7 field types eliminated (9 new validation errors added in their place, all emitted as `{'code': 'invalid'}`). Forms accepting untrusted input are now crash-proof.
 
+- **`BooleanField` now rejects wrong types for optional fields**: Previously, optional `BooleanField` instances silently accepted non-bool values. Now `isinstance(value, bool)` is enforced regardless of `required` status. Any present non-bool value emits `{'code': 'invalid'}`.
+
+- **`EmailField` now emits `'empty'` for empty strings**: Previously emitted `'required'` (inconsistent with `CharField`). Now `value == ''` with `not self.empty` correctly emits `{'code': 'empty'}`.
+
+- **`EmailField(empty=True)` now validates non-empty emails**: Previously skipped regex validation entirely when `empty=True`, so invalid emails passed. Now accepts `''` without regex, but validates all non-empty strings with regex regardless of `empty` setting.
+
+- **`IdField` now rejects booleans**: Previously, `isinstance(True, int)` caused `IdField` to accept `True`. Now explicit `isinstance(value, bool)` check rejects booleans before int/str validation. Optional fields with wrong types now also emit `{'code': 'invalid'}`.
+
+- **`JsonField` now accepts absent optional fields**: Previously, absent optional `JsonField` instances emitted `{'code': 'invalid'}` when `required=False`. Now returns with no errors (only `required` error is emitted for absent required fields).
+
+- **`NumberField` now rejects wrong types for optional fields and booleans**: Previously, optional `NumberField` silently accepted wrong types. Now enforces `isinstance(value, self.datatype)` regardless of `required` status. Explicit `isinstance(value, bool)` check rejects booleans before type checks (since `isinstance(True, int)` is `True` in Python).
+
 ### Added
 
 - **`LayrzError` Pydantic model** (module: `layrz_forms/errors.py`): The new error representation with four fields (`code`, `expected`, `received`, `extra`). Exported from `layrz_forms.__init__`.
@@ -46,11 +58,6 @@
 
 The following issues are pinned by tests and slated for follow-up releases:
 
-- `EmailField(empty=True)` skips regex validation entirely, so invalid emails pass.
-- `EmailField` emits `'required'` for empty string where `CharField` emits `'empty'`.
-- Optional `JsonField` emits `'invalid'` when the value is absent.
-- Optional `BooleanField`, `NumberField`, `IdField` silently accept wrong types (error only when `required=True`).
-- `NumberField(datatype=int)` accepts `True` (since `isinstance(True, int)` is `True`).
 - Parent form mutates child form's error dicts (via `del error['code']`).
 - Non-list value supplied for nested list is silently skipped with no error.
 - Any `list` class attribute is claimed as a nested-form declaration.
