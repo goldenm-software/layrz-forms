@@ -4,12 +4,10 @@ import (
 	"testing"
 )
 
-// Test constants for common field error codes and datatype values.
+// Test constants for common field error codes.
 const (
 	testCodeMinLength = "minLength"
 	testCodeMinValue  = "minValue"
-	testDatatypeInt   = "int"
-	testDatatypeFloat = "float"
 )
 
 // TestNilFormInput tests that a nil form produces a config error.
