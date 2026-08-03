@@ -7,6 +7,7 @@ from typing import Any
 import pytest
 
 import layrz_forms
+from tests.helpers import dump_errors
 
 
 def load_vector_files() -> list[tuple[str, list[dict[str, Any]]]]:
@@ -64,7 +65,7 @@ def test_vectors(field_name: str, cases: list[dict[str, Any]]) -> None:
     # Create and validate form
     form = TestForm(input_dict)
     form.is_valid()
-    errors = form.errors()
+    errors = form.errors
 
     # Convert snake_case field name to camelCase for assertion
     camel_field = 'testField'
@@ -73,11 +74,11 @@ def test_vectors(field_name: str, cases: list[dict[str, Any]]) -> None:
     if expected_errors:
       # Errors expected
       assert camel_field in errors, f'{case_id}: Expected field {camel_field} in errors, got {errors}'
-      actual_errors = errors[camel_field]
+      actual_errors = [error.model_dump() for error in errors[camel_field]]
       assert actual_errors == expected_errors, (
         f'{case_id}: Error mismatch.\nExpected: {expected_errors}\nGot: {actual_errors}'
       )
     else:
       # No errors expected
       if camel_field in errors:
-        pytest.fail(f'{case_id}: Expected no errors, but got: {errors[camel_field]}')
+        pytest.fail(f'{case_id}: Expected no errors, but got: {[e.model_dump() for e in errors[camel_field]]}')

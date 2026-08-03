@@ -1,6 +1,7 @@
 """Test Form validation."""
 
 from layrz_forms import BooleanField, CharField, Form, NumberField
+from tests.helpers import dump_errors
 
 
 class TestFormValidationAllValid:
@@ -16,7 +17,7 @@ class TestFormValidationAllValid:
 
     form = TestForm({'name': 'John'})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {'name': 'John'}
 
   def test_all_valid_multiple_fields(self) -> None:
@@ -31,7 +32,7 @@ class TestFormValidationAllValid:
 
     form = TestForm({'name': 'Jane', 'age': 30, 'active': True})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestFormValidationMultiInvalid:
@@ -48,11 +49,11 @@ class TestFormValidationMultiInvalid:
 
     form = TestForm({'name': 'Bob', 'age': -5})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'name' in errors
     assert 'age' in errors
-    assert errors['name'][0]['code'] == 'minLength'
-    assert errors['age'][0]['code'] == 'minValue'
+    assert errors['name'][0].code == 'minLength'
+    assert errors['age'][0].code == 'minValue'
 
 
 class TestFormValidationNone:
@@ -68,7 +69,7 @@ class TestFormValidationNone:
 
     form = TestForm(None)
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {}
 
 
@@ -85,7 +86,7 @@ class TestFormValidationEmpty:
 
     form = TestForm({})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {}
 
   def test_form_empty_dict_required_field(self) -> None:
@@ -98,7 +99,7 @@ class TestFormValidationEmpty:
 
     form = TestForm({})
     assert form.is_valid() is False
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
 
 class TestFormValidationTwice:
@@ -114,13 +115,13 @@ class TestFormValidationTwice:
 
     form = TestForm({})
     assert form.is_valid() is False
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
     # Call is_valid again with same data
     assert form.is_valid() is False
     # Errors should not accumulate
-    assert form.errors() == {'name': [{'code': 'required'}]}
-    assert len(form.errors()['name']) == 1
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
+    assert len(form.errors['name']) == 1
 
   def test_is_valid_called_twice_with_new_data(self) -> None:
     """Test calling is_valid() twice with different data."""
@@ -132,12 +133,12 @@ class TestFormValidationTwice:
 
     form = TestForm({'name': 'John'})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
     # Update data and validate again
     form.obj = {}
     assert form.is_valid() is False
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
 
 class TestFormCleanedDataReference:

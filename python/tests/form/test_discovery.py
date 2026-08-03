@@ -3,6 +3,7 @@
 import pytest
 
 from layrz_forms import CharField, Form, NumberField
+from tests.helpers import dump_errors
 
 
 class TestFieldDiscovery:
@@ -114,7 +115,7 @@ class TestListDiscovery:
     form = TestForm({})
     assert 'items' in form._nested_attrs
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestCleanFunctionDiscovery:
@@ -172,12 +173,12 @@ class TestCleanFunctionDiscovery:
 
     # Verify the order of execution
     form.is_valid()
-    errors = form.errors()
+    errors = form.errors
     assert 'order' in errors
     # Both errors should be present; 'a' should be first (apple executes first)
     assert len(errors['order']) == 2
-    assert errors['order'][0]['code'] == 'a'
-    assert errors['order'][1]['code'] == 'z'
+    assert errors['order'][0].code == 'a'
+    assert errors['order'][1].code == 'z'
 
 
 class TestReservedWordsSkipped:
@@ -195,7 +196,7 @@ class TestReservedWordsSkipped:
     # Reserved words should not appear in _attributes, _clean_functions, etc.
     assert 'errors' not in form._attributes
     assert 'is_valid' not in form._clean_functions
-    assert 'is_valid_async' not in form._clean_functions
+    assert 'ais_valid' not in form._clean_functions
     assert 'cleaned_data' not in form._attributes
 
 

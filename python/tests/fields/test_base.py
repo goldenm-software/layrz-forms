@@ -4,9 +4,10 @@ from typing import Any
 
 import pytest
 
-from layrz_forms import Form
+from layrz_forms import Form, LayrzError
 from layrz_forms.fields import Field
-from layrz_forms.types import ErrorType
+from layrz_forms.types import ErrorsType
+from tests.helpers import dump_errors
 
 
 class TestFieldRequiredSemantics:
@@ -15,29 +16,29 @@ class TestFieldRequiredSemantics:
   def test_required_field_with_none(self) -> None:
     """Test required field raises error when value is None."""
     field = Field(required=True)
-    errors: ErrorType = {}
+    errors: ErrorsType = {}
     field.validate(key='test_field', value=None, errors=errors)
     assert 'testField' in errors
-    assert errors['testField'] == [{'code': 'required'}]
+    assert dump_errors(errors) == {'testField': [{'code': 'required'}]}
 
   def test_required_field_with_value(self) -> None:
     """Test required field accepts non-None value."""
     field = Field(required=True)
-    errors: ErrorType = {}
+    errors: ErrorsType = {}
     field.validate(key='test_field', value='value', errors=errors)
     assert 'testField' not in errors
 
   def test_optional_field_with_none(self) -> None:
     """Test optional field accepts None."""
     field = Field(required=False)
-    errors: ErrorType = {}
+    errors: ErrorsType = {}
     field.validate(key='test_field', value=None, errors=errors)
     assert 'testField' not in errors
 
   def test_optional_field_with_value(self) -> None:
     """Test optional field accepts value."""
     field = Field(required=False)
-    errors: ErrorType = {}
+    errors: ErrorsType = {}
     field.validate(key='test_field', value='value', errors=errors)
     assert 'testField' not in errors
 
@@ -51,11 +52,11 @@ class TestCustomFieldSubclass:
     class CustomField(Field):
       """Custom field with correct signature."""
 
-      def validate(self, key: str, value: Any, errors: ErrorType) -> None:
+      def validate(self, key: str, value: Any, errors: ErrorsType) -> None:
         """Validate method with correct parameters."""
         super().validate(key=key, value=value, errors=errors)
         if value == 'bad':
-          self._append_error(key=key, errors=errors, to_add={'code': 'custom_error'})
+          self._append_error(key=key, errors=errors, to_add=LayrzError(code='custom_error'))
 
     class TestForm(Form):
       """Test form with custom field."""
@@ -64,7 +65,7 @@ class TestCustomFieldSubclass:
 
     form = TestForm({'custom': 'bad'})
     assert not form.is_valid()
-    assert form.errors() == {'custom': [{'code': 'custom_error'}]}
+    assert dump_errors(form.errors) == {'custom': [{'code': 'custom_error'}]}
 
   def test_custom_field_wrong_signature_missing_param(self) -> None:
     """Test custom field with wrong signature (missing param) raises RuntimeError."""
@@ -96,7 +97,7 @@ class TestCustomFieldSubclass:
         self,
         key: str,
         value: Any,
-        errors: ErrorType,
+        errors: ErrorsType,
         extra: str,
       ) -> None:  # ty: ignore[invalid-method-override]
         """Validate method with extra parameter."""
@@ -122,7 +123,7 @@ class TestCustomFieldSubclass:
         self,
         name: str,
         val: Any,
-        err: ErrorType,
+        err: ErrorsType,
       ) -> None:  # ty: ignore[invalid-method-override]
         """Validate method with wrong parameter names."""
         pass

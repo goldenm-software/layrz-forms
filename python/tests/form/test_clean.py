@@ -3,6 +3,7 @@
 import pytest
 
 from layrz_forms import CharField, Form
+from tests.helpers import dump_errors
 
 
 class TestSingleCleanFunction:
@@ -23,7 +24,7 @@ class TestSingleCleanFunction:
 
     form = TestForm({'name': 'banned'})
     assert form.is_valid() is False
-    assert form.errors() == {'name': [{'code': 'banned_word'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'banned_word'}]}
 
   def test_clean_function_field_valid(self) -> None:
     """Test clean function when validation passes."""
@@ -40,7 +41,7 @@ class TestSingleCleanFunction:
 
     form = TestForm({'name': 'allowed'})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestMultipleCleanFunctions:
@@ -64,12 +65,12 @@ class TestMultipleCleanFunctions:
 
     form = TestForm({'name': 'test'})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'name' in errors
     assert len(errors['name']) == 2
     # Executed alphabetically
-    assert errors['name'][0]['code'] == 'error_a'
-    assert errors['name'][1]['code'] == 'error_z'
+    assert errors['name'][0].code == 'error_a'
+    assert errors['name'][1].code == 'error_z'
 
 
 class TestCleanFunctionExtraArgs:
@@ -94,8 +95,11 @@ class TestCleanFunctionExtraArgs:
 
     form = TestForm({'password': 'short'})
     assert form.is_valid() is False
-    errors = form.errors()
-    assert errors['password'][0] == {'code': 'weak_password', 'min_length': 8, 'received_length': 5}
+    errors = form.errors
+    assert dump_errors(errors)['password'][0] == {
+      'code': 'weak_password',
+      'extra': {'min_length': 8, 'received_length': 5},
+    }
 
 
 class TestCleanEmptyKeyOrCode:
@@ -166,9 +170,9 @@ class TestCleanMultipleDifferentKeys:
 
     form = TestForm({'password': 'secret123', 'confirm_password': 'wrong'})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'confirmPassword' in errors
-    assert errors['confirmPassword'][0]['code'] == 'passwords_do_not_match'
+    assert errors['confirmPassword'][0].code == 'passwords_do_not_match'
 
 
 class TestCleanWithFieldErrors:
@@ -190,11 +194,11 @@ class TestCleanWithFieldErrors:
     # Field validation fails first
     form = TestForm({'name': 'bob'})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'name' in errors
     # Only field error, clean didn't run
     assert len(errors['name']) == 1
-    assert errors['name'][0]['code'] == 'minLength'
+    assert errors['name'][0].code == 'minLength'
 
   def test_clean_runs_when_field_valid(self) -> None:
     """Test clean runs when field is valid."""
@@ -212,6 +216,6 @@ class TestCleanWithFieldErrors:
     # Field is valid, clean runs
     form = TestForm({'name': 'admin'})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'name' in errors
-    assert errors['name'][0]['code'] == 'reserved'
+    assert errors['name'][0].code == 'reserved'

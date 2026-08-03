@@ -3,6 +3,7 @@
 import strawberry
 
 from layrz_forms import CharField, Form, NumberField, UuidField
+from tests.helpers import dump_errors
 
 
 @strawberry.input
@@ -64,7 +65,7 @@ class TestFormWithStrawberryInput:
     person_input = PersonInput(name='John', email='john@example.com', custom_id=42)
     form = PersonForm(person_input)
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     # custom_id is mapped to customId via strawberry field name
     assert form.cleaned_data == {'name': 'John', 'email': 'john@example.com', 'age': 0, 'customId': 42}
 
@@ -80,8 +81,8 @@ class TestFormWithStrawberryInput:
     person_input = PersonInput(name='Jo', custom_id=1)  # name too short
     form = PersonForm(person_input)
     assert form.is_valid() is False
-    assert 'name' in form.errors()
-    assert form.errors()['name'][0]['code'] == 'minLength'
+    assert 'name' in form.errors
+    assert form.errors['name'][0].code == 'minLength'
 
   def test_form_missing_required_field_in_strawberry(self) -> None:
     """Test Form with Strawberry input missing required field."""
@@ -101,8 +102,8 @@ class TestFormWithStrawberryInput:
     input_obj = MinimalInput(name='John')
     form = TestForm(input_obj)
     assert form.is_valid() is False
-    assert 'email' in form.errors()
-    assert form.errors()['email'][0]['code'] == 'required'
+    assert 'email' in form.errors
+    assert form.errors['email'][0].code == 'required'
 
 
 class TestStrawberryInputWithComplexForm:
@@ -125,8 +126,8 @@ class TestStrawberryInputWithComplexForm:
     person_input = PersonInput(name='John', email='blocked@example.com', custom_id=1)
     form = PersonForm(person_input)
     assert form.is_valid() is False
-    assert 'email' in form.errors()
-    assert form.errors()['email'][0]['code'] == 'blocked_email'
+    assert 'email' in form.errors
+    assert form.errors['email'][0].code == 'blocked_email'
 
   def test_strawberry_input_camel_case_in_errors(self) -> None:
     """Test Strawberry input error keys are in camelCase."""
@@ -147,5 +148,5 @@ class TestStrawberryInputWithComplexForm:
     input_obj = InputWithSnake()
     form = TestForm(input_obj)
     assert form.is_valid() is False
-    assert 'firstName' in form.errors()
-    assert 'lastName' in form.errors()
+    assert 'firstName' in form.errors
+    assert 'lastName' in form.errors

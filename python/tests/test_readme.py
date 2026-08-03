@@ -1,6 +1,7 @@
 """Test the example from README.md."""
 
 import layrz_forms as forms
+from tests.helpers import dump_errors
 
 
 class ExampleForm(forms.Form):
@@ -50,13 +51,13 @@ def test_readme_example() -> None:
   assert result is False  # Actual behavior
 
   # README documents the errors (clean functions intentionally add errors)
-  errors = form.errors()
+  errors = form.errors
   assert 'rangeTextTest' in errors
-  assert errors['rangeTextTest'] == [{'code': 'minLength', 'expected': 5, 'received': 4}]
+  assert dump_errors(errors)['rangeTextTest'] == [{'code': 'minLength', 'expected': 5, 'received': 4}]
   assert 'clean1' in errors
-  assert errors['clean1'] == [{'code': 'error1'}, {'code': 'error2'}]
+  assert dump_errors(errors)['clean1'] == [{'code': 'error1'}, {'code': 'error2'}]
   assert 'clean2' in errors
-  assert errors['clean2'] == [{'code': 'error1'}]
+  assert dump_errors(errors)['clean2'] == [{'code': 'error1'}]
 
 
 def test_readme_example_fixed_range_text() -> None:
@@ -79,7 +80,7 @@ def test_readme_example_fixed_range_text() -> None:
   # Still False due to clean functions adding errors
   assert result is False
 
-  errors = form.errors()
+  errors = form.errors
   # range_text_test should be valid now
   assert 'rangeTextTest' not in errors
   # But clean functions still add errors

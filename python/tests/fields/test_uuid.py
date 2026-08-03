@@ -3,6 +3,7 @@
 import uuid
 
 from layrz_forms import Form, UuidField
+from tests.helpers import dump_errors
 
 
 class TestUuidFieldAbsent:
@@ -19,7 +20,7 @@ class TestUuidFieldAbsent:
     form = TestForm({})
     assert not form.is_valid()
     # KNOWN BUG: UuidField emits both 'required' and 'invalid' when absent
-    assert form.errors() == {'uid': [{'code': 'required'}, {'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'required'}, {'code': 'invalid'}]}
 
   def test_uuid_absent_required_false(self) -> None:
     """Test optional UuidField absent from input."""
@@ -31,7 +32,7 @@ class TestUuidFieldAbsent:
 
     form = TestForm({})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestUuidFieldNone:
@@ -48,7 +49,7 @@ class TestUuidFieldNone:
     form = TestForm({'uid': None})
     assert not form.is_valid()
     # KNOWN BUG: UuidField emits both 'required' and 'invalid' for None
-    assert form.errors() == {'uid': [{'code': 'required'}, {'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'required'}, {'code': 'invalid'}]}
 
   def test_uuid_none_required_false(self) -> None:
     """Test optional UuidField with None."""
@@ -60,7 +61,7 @@ class TestUuidFieldNone:
 
     form = TestForm({'uid': None})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestUuidFieldValidString:
@@ -77,7 +78,7 @@ class TestUuidFieldValidString:
 
     form = TestForm({'uid': valid_uuid})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {'uid': valid_uuid}
 
   def test_uuid_valid_string_uppercase(self) -> None:
@@ -91,7 +92,7 @@ class TestUuidFieldValidString:
 
     form = TestForm({'uid': valid_uuid})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_uuid_valid_string_no_hyphens(self) -> None:
     """Test UuidField with UUID string without hyphens."""
@@ -104,7 +105,7 @@ class TestUuidFieldValidString:
 
     form = TestForm({'uid': valid_uuid})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestUuidFieldValidInstance:
@@ -121,7 +122,7 @@ class TestUuidFieldValidInstance:
 
     form = TestForm({'uid': valid_uuid})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {'uid': valid_uuid}
 
   def test_uuid_valid_uuid_instance_optional(self) -> None:
@@ -135,7 +136,7 @@ class TestUuidFieldValidInstance:
 
     form = TestForm({'uid': valid_uuid})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestUuidFieldInvalidString:
@@ -151,7 +152,7 @@ class TestUuidFieldInvalidString:
 
     form = TestForm({'uid': 'not-a-uuid'})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_malformed_required_false(self) -> None:
     """Test optional UuidField with malformed UUID string."""
@@ -163,7 +164,7 @@ class TestUuidFieldInvalidString:
 
     form = TestForm({'uid': 'not-a-uuid'})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_partial_required_true(self) -> None:
     """Test required UuidField with partial UUID."""
@@ -175,7 +176,7 @@ class TestUuidFieldInvalidString:
 
     form = TestForm({'uid': '550e8400-e29b-41d4'})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_empty_string_required_true(self) -> None:
     """Test required UuidField with empty string."""
@@ -187,7 +188,7 @@ class TestUuidFieldInvalidString:
 
     form = TestForm({'uid': ''})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_empty_string_required_false(self) -> None:
     """Test optional UuidField with empty string."""
@@ -199,7 +200,7 @@ class TestUuidFieldInvalidString:
 
     form = TestForm({'uid': ''})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
 
 class TestUuidFieldNonStringNonUuid:
@@ -215,7 +216,7 @@ class TestUuidFieldNonStringNonUuid:
 
     form = TestForm({'uid': 123})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_int_required_false(self) -> None:
     """Test optional UuidField with integer."""
@@ -227,7 +228,7 @@ class TestUuidFieldNonStringNonUuid:
 
     form = TestForm({'uid': 123})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_list_required_true(self) -> None:
     """Test required UuidField with list."""
@@ -239,7 +240,7 @@ class TestUuidFieldNonStringNonUuid:
 
     form = TestForm({'uid': []})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_dict_required_true(self) -> None:
     """Test required UuidField with dict."""
@@ -251,7 +252,7 @@ class TestUuidFieldNonStringNonUuid:
 
     form = TestForm({'uid': {}})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}
 
   def test_uuid_invalid_bool_required_true(self) -> None:
     """Test required UuidField with boolean."""
@@ -263,4 +264,4 @@ class TestUuidFieldNonStringNonUuid:
 
     form = TestForm({'uid': True})
     assert not form.is_valid()
-    assert form.errors() == {'uid': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'uid': [{'code': 'invalid'}]}

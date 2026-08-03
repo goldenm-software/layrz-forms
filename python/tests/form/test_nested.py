@@ -1,6 +1,7 @@
 """Test nested Form and list validation."""
 
 from layrz_forms import CharField, Form, NumberField
+from tests.helpers import dump_errors
 
 
 class TestNestedFormValid:
@@ -22,7 +23,7 @@ class TestNestedFormValid:
 
     form = ParentForm({'name': 'John', 'address': {'city': 'NYC'}})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestNestedFormInvalid:
@@ -44,9 +45,9 @@ class TestNestedFormInvalid:
 
     form = ParentForm({'name': 'John', 'address': {}})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'address.city' in errors
-    assert errors['address.city'] == [{'code': 'required'}]
+    assert dump_errors(errors)['address.city'] == [{'code': 'required'}]
 
   def test_nested_form_multiple_child_errors(self) -> None:
     """Test nested form with multiple child errors."""
@@ -64,11 +65,11 @@ class TestNestedFormInvalid:
 
     form = ParentForm({'address': {'city': 'LA', 'zip_code': 'not_int'}})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'address.city' in errors
     assert 'address.zipCode' in errors
-    assert errors['address.city'][0]['code'] == 'minLength'
-    assert errors['address.zipCode'][0]['code'] == 'invalid'
+    assert errors['address.city'][0].code == 'minLength'
+    assert errors['address.zipCode'][0].code == 'invalid'
 
   def test_nested_form_camel_case_keys(self) -> None:
     """Test nested form error keys are camelCase."""
@@ -85,7 +86,7 @@ class TestNestedFormInvalid:
 
     form = ParentForm({'address_info': {}})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'addressInfo.firstName' in errors
 
 
@@ -107,9 +108,9 @@ class TestNestedFormInvalidDataType:
 
     form = ParentForm({'address': 'not a dict'})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'address' in errors
-    assert errors['address'] == [{'code': 'invalid', 'message': 'Invalid data type'}]
+    assert dump_errors(errors)['address'] == [{'code': 'invalid', 'extra': {'message': 'Invalid data type'}}]
 
   def test_nested_form_non_dict_list(self) -> None:
     """Test nested form with list value."""
@@ -126,10 +127,12 @@ class TestNestedFormInvalidDataType:
 
     form = ParentForm({'address': ['not', 'a', 'dict']})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'address' in errors
-    assert errors['address'][0]['code'] == 'invalid'
-    assert errors['address'][0]['message'] == 'Invalid data type'
+    assert errors['address'][0].code == 'invalid'
+    extra = errors['address'][0].extra
+    assert extra is not None
+    assert extra['message'] == 'Invalid data type'
 
 
 class TestNestedListOfForms:
@@ -150,7 +153,7 @@ class TestNestedListOfForms:
 
     form = ParentForm({'items': [{'name': 'Item1'}, {'name': 'Item2'}]})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_nested_list_of_forms_invalid(self) -> None:
     """Test nested list of forms with invalid data."""
@@ -167,9 +170,9 @@ class TestNestedListOfForms:
 
     form = ParentForm({'items': [{'name': 'Item1'}, {}]})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
     assert 'items.1.name' in errors
-    assert errors['items.1.name'] == [{'code': 'required'}]
+    assert dump_errors(errors)['items.1.name'] == [{'code': 'required'}]
 
   def test_nested_list_of_forms_empty_list(self) -> None:
     """Test nested list of forms with empty list."""
@@ -186,7 +189,7 @@ class TestNestedListOfForms:
 
     form = ParentForm({'items': []})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestNestedListOfFields:
@@ -202,7 +205,7 @@ class TestNestedListOfFields:
 
     form = ParentForm({'tags': ['tag1', 'tag2', 'tag3']})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_nested_list_of_fields_invalid_item(self) -> None:
     """Test nested list of fields with invalid item."""
@@ -231,7 +234,7 @@ class TestNestedListOfFields:
 
     form = ParentForm({'tags': []})
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestNestedNonListValue:
@@ -248,7 +251,7 @@ class TestNestedNonListValue:
     form = ParentForm({'tags': 'not_a_list'})
     # KNOWN BUG: a non-list value for a nested list is silently skipped with no error
     assert form.is_valid() is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestNestedFormErrorMutation:
@@ -269,9 +272,9 @@ class TestNestedFormErrorMutation:
 
     form = ParentForm({'data': {}})
     assert form.is_valid() is False
-    errors = form.errors()
+    errors = form.errors
 
     # The parent adds the error with 'code' extracted and merged with other keys
     assert 'data.name' in errors
-    assert 'code' in errors['data.name'][0]
-    assert errors['data.name'][0] == {'code': 'required'}
+    assert errors['data.name'][0].code == 'required'
+    assert dump_errors(errors)['data.name'][0] == {'code': 'required'}

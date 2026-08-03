@@ -1,6 +1,7 @@
 """Test Form instance isolation."""
 
 from layrz_forms import CharField, Form, NumberField
+from tests.helpers import dump_errors
 
 
 class TestInstanceIsolation:
@@ -20,8 +21,8 @@ class TestInstanceIsolation:
     form1.is_valid()
     form2.is_valid()
 
-    assert form1.errors() == {'name': [{'code': 'required'}]}
-    assert form2.errors() == {}
+    assert dump_errors(form1.errors) == {'name': [{'code': 'required'}]}
+    assert dump_errors(form2.errors) == {}
 
   def test_two_instances_different_cleaned_data(self) -> None:
     """Test two instances have separate cleaned data."""
@@ -61,8 +62,8 @@ class TestInstanceIsolation:
     assert form2._errors == {}
 
     form2.is_valid()
-    assert form1.errors() == {}
-    assert form2.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form1.errors) == {}
+    assert dump_errors(form2.errors) == {'name': [{'code': 'required'}]}
 
 
 class TestSubclassIsolation:
@@ -128,12 +129,12 @@ class TestRepeatedValidation:
 
     form = TestForm({})
     form.is_valid()
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
     # Update and validate again
     form.obj = {'name': 'John'}
     form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_multiple_clean_runs_dont_accumulate(self) -> None:
     """Test calling is_valid multiple times doesn't accumulate clean errors."""
@@ -150,9 +151,9 @@ class TestRepeatedValidation:
     form = TestForm({})
 
     form.is_valid()
-    first_errors = form.errors()
+    first_errors = form.errors
     assert len(first_errors['name']) == 1
 
     form.is_valid()
-    second_errors = form.errors()
+    second_errors = form.errors
     assert len(second_errors['name']) == 1

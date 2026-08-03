@@ -3,6 +3,7 @@
 import pytest
 
 from layrz_forms import CharField, Form
+from tests.helpers import dump_errors
 
 
 class TestAsyncCleanFunction:
@@ -10,7 +11,7 @@ class TestAsyncCleanFunction:
 
   @pytest.mark.asyncio
   async def test_async_clean_function(self) -> None:
-    """Test async clean function via is_valid_async."""
+    """Test async clean function via ais_valid."""
 
     class TestForm(Form):
       """Test form with async clean."""
@@ -23,9 +24,9 @@ class TestAsyncCleanFunction:
           self.add_errors(key='name', code='banned_word')
 
     form = TestForm({'name': 'banned'})
-    result = await form.is_valid_async()
+    result = await form.ais_valid()
     assert result is False
-    assert form.errors() == {'name': [{'code': 'banned_word'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'banned_word'}]}
 
   @pytest.mark.asyncio
   async def test_async_clean_function_valid(self) -> None:
@@ -42,17 +43,17 @@ class TestAsyncCleanFunction:
           self.add_errors(key='name', code='banned_word')
 
     form = TestForm({'name': 'allowed'})
-    result = await form.is_valid_async()
+    result = await form.ais_valid()
     assert result is True
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestSyncCleanViaAsync:
   """Test sync clean function via is_valid_async."""
 
   @pytest.mark.asyncio
-  async def test_sync_clean_via_is_valid_async(self) -> None:
-    """Test sync clean function works via is_valid_async."""
+  async def test_sync_clean_via_ais_valid(self) -> None:
+    """Test sync clean function works via ais_valid."""
 
     class TestForm(Form):
       """Test form with sync clean."""
@@ -65,9 +66,9 @@ class TestSyncCleanViaAsync:
           self.add_errors(key='name', code='banned_word')
 
     form = TestForm({'name': 'banned'})
-    result = await form.is_valid_async()
+    result = await form.ais_valid()
     assert result is False
-    assert form.errors() == {'name': [{'code': 'banned_word'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'banned_word'}]}
 
 
 class TestAsyncCleanViaSyncRaises:
@@ -89,7 +90,7 @@ class TestAsyncCleanViaSyncRaises:
     with pytest.raises(RuntimeError) as exc_info:
       form.is_valid()
     assert 'Cannot call async clean function in sync context' in str(exc_info.value)
-    assert 'please use is_valid_async method' in str(exc_info.value)
+    assert 'please use ais_valid method' in str(exc_info.value)
 
 
 class TestMixedSyncAsyncClean:
@@ -113,10 +114,10 @@ class TestMixedSyncAsyncClean:
         self.add_errors(key='name', code='async_error')
 
     form = TestForm({'name': 'test'})
-    result = await form.is_valid_async()
+    result = await form.ais_valid()
     assert result is False
-    errors = form.errors()
+    errors = form.errors
     assert len(errors['name']) == 2
     # Alphabetical order
-    assert errors['name'][0]['code'] == 'sync_error'
-    assert errors['name'][1]['code'] == 'async_error'
+    assert errors['name'][0].code == 'sync_error'
+    assert errors['name'][1].code == 'async_error'

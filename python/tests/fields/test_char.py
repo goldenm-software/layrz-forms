@@ -3,6 +3,7 @@
 from enum import Enum, StrEnum
 
 from layrz_forms import CharField, Form
+from tests.helpers import dump_errors
 
 
 class StringChoice(Enum):
@@ -32,7 +33,7 @@ class TestCharFieldAbsent:
 
     form = TestForm({})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
   def test_char_absent_required_false(self) -> None:
     """Test optional CharField absent from input."""
@@ -44,7 +45,7 @@ class TestCharFieldAbsent:
 
     form = TestForm({})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestCharFieldNone:
@@ -60,7 +61,7 @@ class TestCharFieldNone:
 
     form = TestForm({'name': None})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'required'}]}
 
   def test_char_none_required_false(self) -> None:
     """Test optional CharField with None."""
@@ -72,7 +73,7 @@ class TestCharFieldNone:
 
     form = TestForm({'name': None})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestCharFieldValid:
@@ -88,7 +89,7 @@ class TestCharFieldValid:
 
     form = TestForm({'name': 'John'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {'name': 'John'}
 
   def test_char_valid_empty_string_empty_true(self) -> None:
@@ -101,7 +102,7 @@ class TestCharFieldValid:
 
     form = TestForm({'name': ''})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
     assert form.cleaned_data == {'name': ''}
 
   def test_char_valid_empty_string_empty_false(self) -> None:
@@ -114,7 +115,7 @@ class TestCharFieldValid:
 
     form = TestForm({'name': ''})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'empty'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'empty'}]}
 
 
 class TestCharFieldMinLength:
@@ -130,7 +131,7 @@ class TestCharFieldMinLength:
 
     form = TestForm({'name': 'hello'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_min_length_under(self) -> None:
     """Test CharField under min_length."""
@@ -142,7 +143,7 @@ class TestCharFieldMinLength:
 
     form = TestForm({'name': 'hola'})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'minLength', 'expected': 5, 'received': 4}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'minLength', 'expected': 5, 'received': 4}]}
 
   def test_char_min_length_over(self) -> None:
     """Test CharField over min_length."""
@@ -154,7 +155,7 @@ class TestCharFieldMinLength:
 
     form = TestForm({'name': 'hello world'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
 
 class TestCharFieldMaxLength:
@@ -170,7 +171,7 @@ class TestCharFieldMaxLength:
 
     form = TestForm({'name': 'hello'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_max_length_under(self) -> None:
     """Test CharField under max_length."""
@@ -182,7 +183,7 @@ class TestCharFieldMaxLength:
 
     form = TestForm({'name': 'hi'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_max_length_over(self) -> None:
     """Test CharField over max_length."""
@@ -194,7 +195,7 @@ class TestCharFieldMaxLength:
 
     form = TestForm({'name': 'hello world'})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'maxLength', 'expected': 5, 'received': 11}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'maxLength', 'expected': 5, 'received': 11}]}
 
 
 class TestCharFieldChoices:
@@ -210,7 +211,7 @@ class TestCharFieldChoices:
 
     form = TestForm({'status': 'active'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_choices_invalid(self) -> None:
     """Test CharField with invalid choice."""
@@ -222,7 +223,7 @@ class TestCharFieldChoices:
 
     form = TestForm({'status': 'pending'})
     assert not form.is_valid()
-    assert form.errors() == {
+    assert dump_errors(form.errors) == {
       'status': [{'code': 'invalidChoice', 'expected': ['active', 'inactive'], 'received': 'pending'}]
     }
 
@@ -240,7 +241,7 @@ class TestCharFieldRegex:
 
     form = TestForm({'code': 'ABC'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_regex_no_match(self) -> None:
     """Test CharField not matching regex."""
@@ -252,7 +253,9 @@ class TestCharFieldRegex:
 
     form = TestForm({'code': 'abc'})
     assert not form.is_valid()
-    assert form.errors() == {'code': [{'code': 'invalidFormat', 'expected': r'^[A-Z]{3}$', 'received': 'abc'}]}
+    assert dump_errors(form.errors) == {
+      'code': [{'code': 'invalidFormat', 'expected': r'^[A-Z]{3}$', 'received': 'abc'}]
+    }
 
   def test_char_regex_empty_string_empty_true(self) -> None:
     """Test CharField regex validation with empty=True and empty string."""
@@ -265,7 +268,7 @@ class TestCharFieldRegex:
     form = TestForm({'code': ''})
     # When empty=True and string is empty, regex is still validated
     assert not form.is_valid()
-    assert form.errors() == {'code': [{'code': 'invalidFormat', 'expected': r'^[A-Z]{3}$', 'received': ''}]}
+    assert dump_errors(form.errors) == {'code': [{'code': 'invalidFormat', 'expected': r'^[A-Z]{3}$', 'received': ''}]}
 
 
 class TestCharFieldEnumConversion:
@@ -312,7 +315,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': 42})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_int_required_false(self) -> None:
     """Test CharField with int when required=False."""
@@ -324,7 +327,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': 42})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_float_required_true(self) -> None:
     """Test CharField with float when required=True."""
@@ -336,7 +339,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': 1.5})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_float_required_false(self) -> None:
     """Test CharField with float when required=False."""
@@ -348,7 +351,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': 1.5})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_bool_required_true(self) -> None:
     """Test CharField with bool when required=True."""
@@ -360,7 +363,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': True})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_bool_required_false(self) -> None:
     """Test CharField with bool when required=False."""
@@ -372,7 +375,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': False})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_list_required_true(self) -> None:
     """Test CharField with list when required=True."""
@@ -384,7 +387,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': [1, 2]})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_list_required_false(self) -> None:
     """Test CharField with list when required=False."""
@@ -396,7 +399,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': [1, 2]})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_dict_required_true(self) -> None:
     """Test CharField with dict when required=True."""
@@ -408,7 +411,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': {'a': 1}})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_dict_required_false(self) -> None:
     """Test CharField with dict when required=False."""
@@ -420,7 +423,7 @@ class TestCharFieldInvalidType:
 
     form = TestForm({'name': {'a': 1}})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_list_with_min_length(self) -> None:
     """Test that invalid type is caught before min_length check."""
@@ -433,7 +436,7 @@ class TestCharFieldInvalidType:
     form = TestForm({'name': [1, 2]})
     assert not form.is_valid()
     # Only 'invalid' error, not 'minLength'
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_dict_with_min_length(self) -> None:
     """Test that invalid type is caught before min_length check."""
@@ -446,7 +449,7 @@ class TestCharFieldInvalidType:
     form = TestForm({'name': {'a': 1}})
     assert not form.is_valid()
     # Only 'invalid' error, not 'minLength'
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
   def test_char_invalid_type_int_with_min_length(self) -> None:
     """Test that invalid type is caught before min_length check."""
@@ -459,7 +462,7 @@ class TestCharFieldInvalidType:
     form = TestForm({'name': 42})
     assert not form.is_valid()
     # Only 'invalid' error, not 'minLength'
-    assert form.errors() == {'name': [{'code': 'invalid'}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'invalid'}]}
 
 
 class TestCharFieldCombined:
@@ -475,7 +478,7 @@ class TestCharFieldCombined:
 
     form = TestForm({'name': 'Alice'})
     assert form.is_valid()
-    assert form.errors() == {}
+    assert dump_errors(form.errors) == {}
 
   def test_char_min_and_max_length_under_min(self) -> None:
     """Test CharField under min when both constraints applied."""
@@ -487,7 +490,7 @@ class TestCharFieldCombined:
 
     form = TestForm({'name': 'Al'})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'minLength', 'expected': 3, 'received': 2}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'minLength', 'expected': 3, 'received': 2}]}
 
   def test_char_min_and_max_length_over_max(self) -> None:
     """Test CharField over max when both constraints applied."""
@@ -499,7 +502,7 @@ class TestCharFieldCombined:
 
     form = TestForm({'name': 'Alice Wonderland'})
     assert not form.is_valid()
-    assert form.errors() == {'name': [{'code': 'maxLength', 'expected': 10, 'received': 16}]}
+    assert dump_errors(form.errors) == {'name': [{'code': 'maxLength', 'expected': 10, 'received': 16}]}
 
   def test_char_empty_false_takes_precedence(self) -> None:
     """Test that empty and min_length both validate on empty string."""
@@ -512,4 +515,6 @@ class TestCharFieldCombined:
     form = TestForm({'name': ''})
     assert not form.is_valid()
     # Both empty and min_length errors are emitted
-    assert form.errors() == {'name': [{'code': 'empty'}, {'code': 'minLength', 'expected': 3, 'received': 0}]}
+    assert dump_errors(form.errors) == {
+      'name': [{'code': 'empty'}, {'code': 'minLength', 'expected': 3, 'received': 0}]
+    }
