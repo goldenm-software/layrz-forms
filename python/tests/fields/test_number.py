@@ -165,9 +165,8 @@ class TestNumberFieldIntValid:
       count = NumberField(datatype=int, required=True)
 
     form = TestForm({'count': True})
-    # KNOWN BUG: NumberField(datatype=int) accepts True since isinstance(True, int)
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'count': [{'code': 'invalid'}]}
 
 
 class TestNumberFieldFloatValid:
@@ -368,9 +367,8 @@ class TestNumberFieldIntInvalid:
       count = NumberField(datatype=int, required=False)
 
     form = TestForm({'count': 'not a number'})
-    # KNOWN BUG: optional fields silently accept wrong types
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'count': [{'code': 'invalid'}]}
 
   def test_number_int_string_numeric_required_true(self) -> None:
     """Test required NumberField(int) with numeric string."""

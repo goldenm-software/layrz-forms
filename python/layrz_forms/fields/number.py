@@ -50,43 +50,53 @@ class NumberField(Field):
 
     super().validate(key=key, value=value, errors=errors)
 
-    if not isinstance(value, self.datatype) and (self.required and value is not None):
+    # If value is None, skip further validation
+    if value is None:
+      return
+
+    # Reject booleans explicitly (isinstance(True, int) is True in Python)
+    if isinstance(value, bool):
       self._append_error(key=key, errors=errors, to_add=LayrzError(code='invalid'))
-    else:
-      try:
-        if self.min_value is not None:
-          if self.datatype(value) < self.datatype(self.min_value):
-            self._append_error(
-              key=key,
-              errors=errors,
-              to_add=LayrzError(
-                code='minValue',
-                expected=self.datatype(self.min_value),
-                received=self.datatype(value),
-              ),
-            )
-        if self.max_value is not None:
-          if self.datatype(value) > self.datatype(self.max_value):
-            self._append_error(
-              key=key,
-              errors=errors,
-              to_add=LayrzError(
-                code='maxValue',
-                expected=self.datatype(self.max_value),
-                received=self.datatype(value),
-              ),
-            )
-      except ValueError:
-        if self.required:
+      return
+
+    # Check if value is the correct datatype
+    if not isinstance(value, self.datatype):
+      self._append_error(key=key, errors=errors, to_add=LayrzError(code='invalid'))
+      return
+
+    # If we get here, value is the correct type; check min/max constraints
+    try:
+      if self.min_value is not None:
+        if self.datatype(value) < self.datatype(self.min_value):
           self._append_error(
             key=key,
             errors=errors,
-            to_add=LayrzError(code='invalid'),
+            to_add=LayrzError(
+              code='minValue',
+              expected=self.datatype(self.min_value),
+              received=self.datatype(value),
+            ),
           )
-      except TypeError:
-        if self.required:
+      if self.max_value is not None:
+        if self.datatype(value) > self.datatype(self.max_value):
           self._append_error(
             key=key,
             errors=errors,
-            to_add=LayrzError(code='invalid'),
+            to_add=LayrzError(
+              code='maxValue',
+              expected=self.datatype(self.max_value),
+              received=self.datatype(value),
+            ),
           )
+    except ValueError:
+      self._append_error(
+        key=key,
+        errors=errors,
+        to_add=LayrzError(code='invalid'),
+      )
+    except TypeError:
+      self._append_error(
+        key=key,
+        errors=errors,
+        to_add=LayrzError(code='invalid'),
+      )

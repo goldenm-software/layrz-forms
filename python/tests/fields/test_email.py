@@ -182,8 +182,7 @@ class TestEmailFieldEmpty:
 
     form = TestForm({'email': ''})
     assert not form.is_valid()
-    # KNOWN BUG: EmailField emits 'required' for '' where CharField emits 'empty'
-    assert dump_errors(form.errors) == {'email': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'email': [{'code': 'empty'}]}
 
   def test_email_empty_string_empty_true_required_false(self) -> None:
     """Test optional EmailField with empty string when empty=True."""
@@ -207,8 +206,7 @@ class TestEmailFieldEmpty:
 
     form = TestForm({'email': ''})
     assert not form.is_valid()
-    # KNOWN BUG: EmailField emits 'required' for ''
-    assert dump_errors(form.errors) == {'email': [{'code': 'required'}]}
+    assert dump_errors(form.errors) == {'email': [{'code': 'empty'}]}
 
 
 class TestEmailFieldNonString:

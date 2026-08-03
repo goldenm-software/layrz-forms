@@ -188,9 +188,8 @@ class TestIdFieldInvalid:
       item_id = IdField(required=False)
 
     form = TestForm({'item_id': 3.14})
-    # KNOWN BUG: optional fields silently accept wrong types
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'itemId': [{'code': 'invalid'}]}
 
   def test_id_invalid_list_required_true(self) -> None:
     """Test required IdField with list value."""

@@ -48,20 +48,23 @@ class EmailField(Field):
     super().validate(key=key, value=value, errors=errors)
 
     if isinstance(value, str):
-      if not self.empty:
-        if value == '':
+      if value == '':
+        # Empty string: emit 'empty' if not allowed, otherwise accept it
+        if not self.empty:
           self._append_error(
             key=key,
             errors=errors,
-            to_add=LayrzError(code='required'),
+            to_add=LayrzError(code='empty'),
           )
-        else:
-          if not re.match(self.regex, value):
-            self._append_error(
-              key=key,
-              errors=errors,
-              to_add=LayrzError(code='invalid'),
-            )
+        # If self.empty is True, accept empty string without regex check
+      else:
+        # Non-empty string: always validate with regex
+        if not re.match(self.regex, value):
+          self._append_error(
+            key=key,
+            errors=errors,
+            to_add=LayrzError(code='invalid'),
+          )
     else:
       self._append_error(
         key=key,

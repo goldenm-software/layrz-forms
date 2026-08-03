@@ -116,9 +116,8 @@ class TestBooleanFieldInvalid:
       flag = BooleanField(required=False)
 
     form = TestForm({'flag': 'not_bool'})
-    # KNOWN BUG: optional fields silently accept wrong types
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'flag': [{'code': 'invalid'}]}
 
   def test_boolean_non_bool_int_required_true(self) -> None:
     """Test required BooleanField with integer value."""
@@ -141,9 +140,8 @@ class TestBooleanFieldInvalid:
       flag = BooleanField(required=False)
 
     form = TestForm({'flag': 1})
-    # KNOWN BUG: optional fields silently accept wrong types
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'flag': [{'code': 'invalid'}]}
 
   def test_boolean_non_bool_list_required_true(self) -> None:
     """Test required BooleanField with list value."""
@@ -166,6 +164,5 @@ class TestBooleanFieldInvalid:
       flag = BooleanField(required=False)
 
     form = TestForm({'flag': {}})
-    # KNOWN BUG: optional fields silently accept wrong types
-    assert form.is_valid()
-    assert dump_errors(form.errors) == {}
+    assert not form.is_valid()
+    assert dump_errors(form.errors) == {'flag': [{'code': 'invalid'}]}

@@ -29,9 +29,8 @@ class TestJsonFieldDictAbsent:
       data = JsonField(datatype=dict, required=False)
 
     form = TestForm({})
-    assert not form.is_valid()
-    # KNOWN BUG: optional JsonField emits 'invalid' when absent
-    assert dump_errors(form.errors) == {'data': [{'code': 'invalid'}]}
+    assert form.is_valid()
+    assert dump_errors(form.errors) == {}
 
 
 class TestJsonFieldListAbsent:
@@ -59,9 +58,8 @@ class TestJsonFieldListAbsent:
       items = JsonField(datatype=list, required=False)
 
     form = TestForm({})
-    assert not form.is_valid()
-    # KNOWN BUG: optional JsonField emits 'invalid' when absent
-    assert dump_errors(form.errors) == {'items': [{'code': 'invalid'}]}
+    assert form.is_valid()
+    assert dump_errors(form.errors) == {}
 
 
 class TestJsonFieldDictNone:
@@ -89,9 +87,8 @@ class TestJsonFieldDictNone:
       data = JsonField(datatype=dict, required=False)
 
     form = TestForm({'data': None})
-    assert not form.is_valid()
-    # KNOWN BUG: optional JsonField emits 'invalid' when None
-    assert dump_errors(form.errors) == {'data': [{'code': 'invalid'}]}
+    assert form.is_valid()
+    assert dump_errors(form.errors) == {}
 
 
 class TestJsonFieldListNone:
@@ -119,9 +116,8 @@ class TestJsonFieldListNone:
       items = JsonField(datatype=list, required=False)
 
     form = TestForm({'items': None})
-    assert not form.is_valid()
-    # KNOWN BUG: optional JsonField emits 'invalid' when None
-    assert dump_errors(form.errors) == {'items': [{'code': 'invalid'}]}
+    assert form.is_valid()
+    assert dump_errors(form.errors) == {}
 
 
 class TestJsonFieldDictValid:

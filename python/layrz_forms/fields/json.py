@@ -49,6 +49,11 @@ class JsonField(Field):
 
     super().validate(key=key, value=value, errors=errors)
 
+    # If value is None and field is not required, accept it without further validation
+    if value is None and not self.required:
+      return
+
+    # Check if value is the correct datatype
     if not isinstance(value, self.datatype):
       self._append_error(
         key=key,

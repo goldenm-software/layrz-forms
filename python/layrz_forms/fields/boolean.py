@@ -35,7 +35,7 @@ class BooleanField(Field):
 
     super().validate(key=key, value=value, errors=errors)
 
-    if not isinstance(value, bool) and (self.required and value is not None):
+    if value is not None and not isinstance(value, bool):
       self._append_error(
         key=key,
         errors=errors,

@@ -80,7 +80,7 @@ class TestSubclassIsolation:
     class ChildForm(ParentForm):
       """Child form."""
 
-      age = NumberField(required=False)
+      age = NumberField(required=False, datatype=int)
 
     child = ChildForm({'name': 'John', 'age': 30})
     assert child.is_valid() is True

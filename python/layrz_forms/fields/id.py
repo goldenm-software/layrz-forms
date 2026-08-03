@@ -36,35 +36,50 @@ class IdField(Field):
 
     super().validate(key=key, value=value, errors=errors)
 
-    if not isinstance(value, (int, str)) and (self.required and value is not None):
+    if value is None:
+      return
+
+    # Reject booleans explicitly (isinstance(True, int) is True in Python)
+    if isinstance(value, bool):
       self._append_error(
         key=key,
         errors=errors,
         to_add=LayrzError(code='invalid'),
       )
-    else:
-      if value is None:
-        return
-      if isinstance(value, str):
-        try:
-          value = int(value)
-        except ValueError:
-          self._append_error(
-            key=key,
-            errors=errors,
-            to_add=LayrzError(code='invalid'),
-          )
-          return
+      return
+
+    # Check if value is int or str
+    if not isinstance(value, (int, str)):
+      self._append_error(
+        key=key,
+        errors=errors,
+        to_add=LayrzError(code='invalid'),
+      )
+      return
+
+    # If it's a string, try to convert to int
+    if isinstance(value, str):
       try:
-        if value <= 0:
-          self._append_error(
-            key=key,
-            errors=errors,
-            to_add=LayrzError(code='invalid'),
-          )
-      except TypeError:
+        value = int(value)
+      except ValueError:
         self._append_error(
           key=key,
           errors=errors,
           to_add=LayrzError(code='invalid'),
         )
+        return
+
+    # Check if value is positive
+    try:
+      if value <= 0:
+        self._append_error(
+          key=key,
+          errors=errors,
+          to_add=LayrzError(code='invalid'),
+        )
+    except TypeError:
+      self._append_error(
+        key=key,
+        errors=errors,
+        to_add=LayrzError(code='invalid'),
+      )
