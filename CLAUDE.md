@@ -4,33 +4,63 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Commands
 
-All commands run from the `python/` directory.
+From the repository root, `make` targets run **both** languages — that is the pre-push gate:
 
 ```bash
-# Install dev dependencies
-uv sync --only-group dev
-
-# Lint
-uv run ruff check
-
-# Type check
-uv run ty check
-
-# Run tests
-uv run pytest -q
-
-# Run tests with coverage (CI requires 90% threshold; current is 98%)
-uv run pytest --cov=layrz_forms --cov-report=term-missing
-
-# Build distribution
-uv run python -m build
+make checks          # lint + typecheck + build + test, Python and Go
+make test            # tests with coverage thresholds enforced (Python 90%, Go 90%)
+make format          # ruff format + gofmt -w
+make install-hooks   # enable .githooks/pre-commit, which runs `make checks`
 ```
+
+Per language, run `make -C python <target>` or `make -C go <target>`. The root Makefile is the
+union of both; it deliberately has no `py-*`/`go-*` targets.
+
+Python, from `python/`:
+
+```bash
+uv sync --only-group dev                                    # install dev dependencies
+uv run ruff check                                           # lint
+uv run ty check                                             # type check — ty, NOT mypy
+uv run pytest -q                                            # tests
+uv run pytest --cov=layrz_forms --cov-report=term-missing    # tests with coverage
+uv run python -m build                                      # build distribution
+```
+
+Go, from `go/`:
+
+```bash
+gofmt -l .           # must print nothing
+go vet ./...
+go test ./...
+make test            # enforces the coverage threshold in go/Makefile
+```
+
+Type checking uses **`ty`**, not mypy. Suppressions must be `# ty: ignore[rule-code]` — `ty`
+silently ignores mypy's `# type: ignore[...]` and the check still fails.
 
 Deployment to PyPI is tag-triggered via `.github/workflows/deploy.yaml` — push a `v[0-9]+.[0-9]+.[0-9]+` tag to main to build and publish.
 
 ## Architecture
 
-**layrz-forms** is a Python form validation library — a simpler alternative to Django Forms. It validates data from dicts, plain objects, or Strawberry GraphQL objects. The package is located at `python/layrz_forms/` (this is a monorepo; `vectors/` holds shared cross-language test vectors for a future Go implementation).
+**layrz-forms** is a form validation library — a simpler alternative to Django Forms — implemented
+**twice**, in Python and in Go, against one shared behavioural spec.
+
+```
+python/    Python library (layrz_forms) — the REFERENCE implementation
+go/        Go library (module github.com/goldenm-software/layrz-forms/go/v3)
+vectors/   shared cross-language test vectors — 96 cases, the spec both sides must satisfy
+.claude/   Claude Code plugin: form-builder router + py/go-form-builder skills
+```
+
+Python validates dicts, plain objects, and Strawberry GraphQL inputs. Go validates structs via
+`layrz:` tags and reflection. The APIs differ by necessity — Go has no descriptors or metaclasses —
+but the error output is identical: same codes, same camelCase keys, same dotted nested keys.
+
+**`vectors/fields/*.json` is the spec, not a convenience.** Both test suites consume it. When
+changing validation behaviour in either language, the vectors decide what is correct; if a change
+makes a vector fail, the change is wrong unless the vector is deliberately being corrected — and
+then BOTH implementations must be updated together.
 
 ### Core abstractions
 
@@ -69,12 +99,45 @@ Deployment to PyPI is tag-triggered via `.github/workflows/deploy.yaml` — push
 - Python minimum version: `>=3.14`
 - Dependencies: `strawberry-graphql>=0.287.0` (for `Form.strawberry_to_dict()`), `pydantic>=2.13.4`
 
+## Go implementation
+
+`go/` is a redesign, not a transliteration. Rules come from `layrz:` struct tags parsed by
+reflection; custom validation comes from method-name conventions:
+
+- `Clean<FieldName>(value <FieldType>) *FieldError` — per field
+- `Clean<Suffix>() Errors` — cross-field, returns the key→errors map so it can use arbitrary keys
+
+Both need pointer receivers. Order is tag rules → per-field hooks → cross-field hooks, accumulating.
+
+**Absence is modelled by pointers.** A pointer field is absent when nil, and `required` reports on
+it. A **value** field is always present, so `required` never fires on it and a zero value is a real
+value — `Name string` = `""` reports `empty`, not `required`. Value fields exist because
+`graph-gophers/graphql-go` rejects a pointer for a non-null (`!`) GraphQL input, so a `String!`
+must be declared as a value.
+
+Configuration problems — a malformed tag, a tag/type mismatch, a bad hook signature, a recovered
+panic — surface under the reserved `_config` key rather than panicking. A `_config` error means a
+programming bug, not invalid user input.
+
+`ToCamelCase` lowercases only the first character, so Go acronyms mangle: `ID` → `iD`, `URL` →
+`uRL`. This is intentional and matches Python exactly. Do not "fix" it.
+
 ## Testing
 
-Tests live in `python/tests/` with 258 test cases achieving 98% coverage. Run `uv run pytest -q` from `python/` to execute.
+Python: tests in `python/tests/`, currently 295 tests at ~97% coverage. Go: tests alongside the
+sources in `go/`, currently ~90.7% coverage. Both enforce a 90% floor.
 
-Behavior is pinned by tests, including known bugs (see CHANGELOG.md). A test failing after a source change indicates the change altered observable behavior — do not silence it without intent.
+Behavior is pinned by tests. A test failing after a source change means the change altered
+observable behavior — do not silence it without intent.
 
-Cross-language test vectors are in `vectors/fields/*.json` (one file per field type) with ~82 cases each. This is the shared spec for the future Go implementation; the schema uses an explicit `value_absent` flag because "absent" and "present but None" are distinct cases.
+`vectors/fields/*.json` holds 96 shared cases (one file per field type) consumed by BOTH suites.
+The schema uses an explicit `value_absent` flag because "absent" and "present but None" are
+distinct cases. Python drives them via `python/tests/test_vectors.py`, which is parametrized per
+FILE — so pytest reports 7 tests, each looping over its file's cases. Seven passing tests means all
+96 cases passed; it does not mean cases were skipped.
 
-CI enforces a 90% coverage threshold; current coverage is 98%.
+Numbers in this file and in CHANGELOG.md drift. Measure before quoting:
+
+```bash
+python3 -c "import json,glob; print(sum(len(json.load(open(f))) for f in glob.glob('vectors/fields/*.json')))"
+```

@@ -96,6 +96,14 @@ All methods named with the `clean_*` prefix are automatically discovered and exe
 
 ## FAQ
 
+### Why is this package called `layrz-forms`?
+
+All packages developed by [Layrz](https://layrz.com) are prefixed with `layrz`, check out our other packages on [PyPi](https://pypi.org/user/layrz-software/) and [GitHub](https://github.com/goldenm-software).
+
+### Why this library exists?
+
+We validate a lot of structured input across our services — API payloads, GraphQL inputs, message bodies — and Django Forms is heavier than we need for that. So we built `layrz-forms` as a smaller alternative, and then ported it to Go so both halves of our stack validate identically against the same shared spec. We think it could be useful for other developers, so we decided to share it with the community.
+
 ### Do you have other libraries?
 
 Of course! We have multiple libraries (for Layrz or general purpose) that you can use in your projects, you can find us on [PyPi of Golden M](https://pypi.org/user/goldenm/) or [PyPi of Layrz](https://pypi.org/user/layrz-software/) for Python libraries, [RubyGems](https://rubygems.org/profiles/goldenm) for Ruby gems, [NPM of Golden M](https://www.npmjs.com/~goldenm) or [NPM of Layrz](https://www.npmjs.com/~layrz-software) for NodeJS libraries or here in [Pub.dev](https://pub.dev/publishers/goldenm.com/packages) for Dart/Flutter libraries.
@@ -120,4 +128,4 @@ This project is maintained by [Golden M](https://goldenm.com) with authorization
 
 ## Who are you? / Want to work with us?
 
-**Golden M** is a software and hardware development company what is working on a new, innovative and disruptive technologies. For more information, contact us at [sales@goldenm.com](mailto:sales@goldenm.com) or via WhatsApp at [+(507)-6979-3073](https://wa.me/50769793073?text="From%20layrz_theme%20flutter%20library.%20Hello").
+**Golden M** is a software and hardware development company what is working on a new, innovative and disruptive technologies. For more information, contact us at [sales@goldenm.com](mailto:sales@goldenm.com) or via WhatsApp at [+(507)-6979-3073](https://wa.me/50769793073?text="From%20layrz-forms%20library.%20Hello").
