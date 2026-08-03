@@ -8,6 +8,20 @@ import (
 
 const maxDepth = 32
 
+// scalarPtr returns a *T pointing at fieldVal's value for a value field, or fieldVal itself for a
+// pointer field (nil when the pointer is nil). Used to synthesize a pointer argument for validators
+// that take *T and check for nil to determine absence.
+// For pointer fields, returns fieldVal (which may be nil, treated as absent by validators).
+// For value fields, returns a pointer to the value, which is never nil (always present).
+func scalarPtr(fieldVal reflect.Value) reflect.Value {
+	if fieldVal.Kind() == reflect.Ptr {
+		// Pointer field: return it as-is (nil or non-nil)
+		return fieldVal
+	}
+	// Value field: take address of the field (always non-nil)
+	return fieldVal.Addr()
+}
+
 // validateStruct walks ptrVal (a non-nil pointer to a struct) and accumulates
 // errors into out, prefixing every key with prefix (empty at top level).
 // Recursion depth is guarded; exceeding maxDepth adds a config error.
@@ -155,6 +169,9 @@ func validateStruct(ptrVal reflect.Value, prefix string, out Errors, depth int) 
 }
 
 // validateScalarField dispatches to the appropriate validator based on spec.Kind.
+// For validators that take *T (char, email, uuid, bool), a non-pointer field is synthesized
+// into a pointer via scalarPtr(). For validators that take any, a non-pointer field is passed
+// directly (never nil, so always present per our semantics).
 func validateScalarField(spec *FieldSpec, fieldVal reflect.Value, key string, out Errors) {
 	rules, err := spec.Rules()
 	if err != nil {
@@ -172,7 +189,6 @@ func validateScalarField(spec *FieldSpec, fieldVal reflect.Value, key string, ou
 	switch spec.Kind {
 	case KindID:
 		r := rules.(IDRules)
-		// Unwrap pointer before passing to validator
 		var val any
 		if fieldVal.Kind() == reflect.Ptr {
 			if !fieldVal.IsNil() {
@@ -184,50 +200,28 @@ func validateScalarField(spec *FieldSpec, fieldVal reflect.Value, key string, ou
 		errs = ValidateID(val, r)
 
 	case KindEmail:
-		// Type assert to *string
-		var val *string
-		if fieldVal.Kind() == reflect.Ptr {
-			if fieldVal.IsNil() {
-				val = nil
-			} else {
-				ptrVal := fieldVal.Interface().(*string)
-				val = ptrVal
-			}
-		}
 		r := rules.(EmailRules)
+		ptrVal := scalarPtr(fieldVal)
+		// ptrVal is always a *string now (either the pointer field or &valueField)
+		val := ptrVal.Interface().(*string)
 		errs = ValidateEmail(val, r)
 
 	case KindUUID:
-		// Type assert to *string
-		var val *string
-		if fieldVal.Kind() == reflect.Ptr {
-			if fieldVal.IsNil() {
-				val = nil
-			} else {
-				ptrVal := fieldVal.Interface().(*string)
-				val = ptrVal
-			}
-		}
 		r := rules.(UUIDRules)
+		ptrVal := scalarPtr(fieldVal)
+		// ptrVal is always a *string now
+		val := ptrVal.Interface().(*string)
 		errs = ValidateUUID(val, r)
 
 	case KindChar:
-		// Type assert to *string
-		var val *string
-		if fieldVal.Kind() == reflect.Ptr {
-			if fieldVal.IsNil() {
-				val = nil
-			} else {
-				ptrVal := fieldVal.Interface().(*string)
-				val = ptrVal
-			}
-		}
 		r := rules.(CharRules)
+		ptrVal := scalarPtr(fieldVal)
+		// ptrVal is always a *string now
+		val := ptrVal.Interface().(*string)
 		errs = ValidateChar(val, r)
 
 	case KindNumber:
 		r := rules.(NumberRules)
-		// Unwrap pointer before passing to validator
 		var val any
 		if fieldVal.Kind() == reflect.Ptr {
 			if !fieldVal.IsNil() {
@@ -239,22 +233,14 @@ func validateScalarField(spec *FieldSpec, fieldVal reflect.Value, key string, ou
 		errs = ValidateNumber(val, r)
 
 	case KindBool:
-		// Type assert to *bool
-		var val *bool
-		if fieldVal.Kind() == reflect.Ptr {
-			if fieldVal.IsNil() {
-				val = nil
-			} else {
-				ptrVal := fieldVal.Interface().(*bool)
-				val = ptrVal
-			}
-		}
 		r := rules.(BoolRules)
+		ptrVal := scalarPtr(fieldVal)
+		// ptrVal is always a *bool now
+		val := ptrVal.Interface().(*bool)
 		errs = ValidateBool(val, r)
 
 	case KindJSON:
 		r := rules.(JSONRules)
-		// Unwrap pointer before passing to validator
 		var val any
 		if fieldVal.Kind() == reflect.Ptr {
 			if !fieldVal.IsNil() {

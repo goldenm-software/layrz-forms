@@ -111,20 +111,21 @@ func (s *FieldSpec) Rules() (any, error) {
 
 // CheckType reports whether the spec's Kind is compatible with the Go field type,
 // and infers Datatype from the type when the tag omitted it.
-// t is the struct field's type, typically a pointer.
+// For scalar kinds, t can be either a pointer (which models absence as nil) or a value field
+// (which is always present). A non-pointer scalar field satisfies required trivially.
+// t is the struct field's type.
 func (s *FieldSpec) CheckType(t reflect.Type) error {
-	// Helper to check if t is a pointer to the given kind
-	isPointerTo := func(elem reflect.Kind) bool {
-		return t.Kind() == reflect.Ptr && t.Elem().Kind() == elem
+	// elemType is the underlying scalar type: t itself for a value field, or t.Elem() for a pointer.
+	elemType := t
+	isPointer := t.Kind() == reflect.Ptr
+	if isPointer {
+		elemType = t.Elem()
 	}
 
-	// Helper to check if t is a pointer to one of the given kinds
-	isPointerToKind := func(kinds ...reflect.Kind) bool {
-		if t.Kind() != reflect.Ptr {
-			return false
-		}
+	// Helper to check if elemType is one of the given kinds
+	elemIsKind := func(kinds ...reflect.Kind) bool {
 		for _, k := range kinds {
-			if t.Elem().Kind() == k {
+			if elemType.Kind() == k {
 				return true
 			}
 		}
@@ -133,26 +134,26 @@ func (s *FieldSpec) CheckType(t reflect.Type) error {
 
 	switch s.Kind {
 	case KindID:
-		// id: *int, *int64, *string OK
-		if !isPointerToKind(reflect.Int, reflect.Int64, reflect.String) {
-			return fmt.Errorf("layrz: kind \"id\" requires *int, *int64, or *string, got %v", t)
+		// id: int, int64, string, *int, *int64, or *string
+		if !elemIsKind(reflect.Int, reflect.Int64, reflect.String) {
+			return fmt.Errorf("layrz: kind \"id\" requires an integer or string (or pointer to one), got %v", t)
 		}
 
 	case KindEmail, KindUUID, KindChar:
-		// email/uuid/char: *string only
-		if !isPointerTo(reflect.String) {
-			return fmt.Errorf("layrz: kind %q requires *string, got %v", s.Kind, t)
+		// email/uuid/char: string or *string
+		if elemType.Kind() != reflect.String {
+			return fmt.Errorf("layrz: kind %q requires a string or *string, got %v", s.Kind, t)
 		}
 
 	case KindNumber:
-		// number: *int, *int8, *int16, *int32, *int64, *float32, *float64
-		if !isPointerToKind(reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64) {
-			return fmt.Errorf("layrz: kind \"number\" requires *int or *float, got %v", t)
+		// number: int, int8, int16, int32, int64, float32, float64, or pointers to them
+		if !elemIsKind(reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64, reflect.Float32, reflect.Float64) {
+			return fmt.Errorf("layrz: kind \"number\" requires an int or float type (or pointer to one), got %v", t)
 		}
 
 		// Infer Datatype from the element type if not explicitly set
 		if s.Datatype == "" {
-			switch t.Elem().Kind() {
+			switch elemType.Kind() {
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				s.Datatype = "int"
 			case reflect.Float32, reflect.Float64:
@@ -160,33 +161,27 @@ func (s *FieldSpec) CheckType(t reflect.Type) error {
 			}
 		} else {
 			// Check that explicit Datatype matches the Go type
-			goType := t.Elem().Kind()
 			switch s.Datatype {
 			case "int":
-				if goType != reflect.Int && goType != reflect.Int8 && goType != reflect.Int16 && goType != reflect.Int32 && goType != reflect.Int64 {
+				if !elemIsKind(reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64) {
 					return fmt.Errorf("layrz: datatype \"int\" incompatible with %v", t)
 				}
 			case "float":
-				if goType != reflect.Float32 && goType != reflect.Float64 {
+				if !elemIsKind(reflect.Float32, reflect.Float64) {
 					return fmt.Errorf("layrz: datatype \"float\" incompatible with %v", t)
 				}
 			}
 		}
 
 	case KindBool:
-		// bool: *bool only
-		if !isPointerTo(reflect.Bool) {
-			return fmt.Errorf("layrz: kind \"bool\" requires *bool, got %v", t)
+		// bool: bool or *bool
+		if elemType.Kind() != reflect.Bool {
+			return fmt.Errorf("layrz: kind \"bool\" requires a bool or *bool, got %v", t)
 		}
 
 	case KindJSON:
-		// json: *[]any, *map[string]any, or more general *[]T, *map[K]V
-		if t.Kind() != reflect.Ptr {
-			return fmt.Errorf("layrz: kind \"json\" requires a pointer type, got %v", t)
-		}
-
-		elem := t.Elem()
-		switch elem.Kind() {
+		// json: []any, map[string]any, *[]any, *map[string]any, or more general slice/map types (pointer or value)
+		switch elemType.Kind() {
 		case reflect.Slice, reflect.Array:
 			// It's a slice/array, infer as "list"
 			if s.Datatype == "" {
@@ -204,13 +199,13 @@ func (s *FieldSpec) CheckType(t reflect.Type) error {
 			}
 
 		default:
-			return fmt.Errorf("layrz: kind \"json\" requires *[]T or *map[K]V, got %v", t)
+			return fmt.Errorf("layrz: kind \"json\" requires a slice/array or map type (or pointer to one), got %v", t)
 		}
 
 	case KindSubform:
-		// subform: pointer to struct
+		// subform: pointer to struct (value struct not yet supported)
 		if t.Kind() != reflect.Ptr {
-			return fmt.Errorf("layrz: kind \"subform\" requires a pointer type, got %v", t)
+			return fmt.Errorf("layrz: kind \"subform\" requires a pointer to struct, got %v", t)
 		}
 		if t.Elem().Kind() != reflect.Struct {
 			return fmt.Errorf("layrz: kind \"subform\" requires a pointer to struct, got %v", t)

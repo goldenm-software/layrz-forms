@@ -781,3 +781,367 @@ func TestIDFieldWithBothTypes(t *testing.T) {
 		t.Errorf("expected stringId error")
 	}
 }
+
+// TestValueFieldChar tests char validation with non-pointer string fields.
+func TestValueFieldChar(t *testing.T) {
+	t.Run("empty string with required and empty=false", func(t *testing.T) {
+		type ValueCharForm struct {
+			Name string `layrz:"char,required"`
+		}
+		form := &ValueCharForm{Name: ""}
+		errs := Validate(form)
+
+		// Should have "empty" error, NOT "required"
+		if fieldErrs, ok := errs["name"]; !ok {
+			t.Errorf("expected error for name field")
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "empty" {
+			t.Errorf("empty string with empty=false should emit empty error, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("empty string with required and empty=true", func(t *testing.T) {
+		type ValueCharForm struct {
+			Name string `layrz:"char,required,empty"`
+		}
+		form := &ValueCharForm{Name: ""}
+		errs := Validate(form)
+
+		// Should have no errors
+		if len(errs) > 0 {
+			t.Errorf("expected no errors with empty=true, got %v", errs)
+		}
+	})
+
+	t.Run("non-empty string with min_length constraint", func(t *testing.T) {
+		type ValueCharForm struct {
+			Name string `layrz:"char,required,min_length=5"`
+		}
+		form := &ValueCharForm{Name: "abc"}
+		errs := Validate(form)
+
+		if fieldErrs, ok := errs["name"]; !ok {
+			t.Errorf("expected error for name field")
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+			t.Errorf("expected minLength error, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("valid string with required and constraints", func(t *testing.T) {
+		type ValueCharForm struct {
+			Name string `layrz:"char,required,min_length=3,max_length=10"`
+		}
+		form := &ValueCharForm{Name: "valid"}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors, got %v", errs)
+		}
+	})
+}
+
+// TestValueFieldEmail tests email validation with non-pointer string fields.
+func TestValueFieldEmail(t *testing.T) {
+	t.Run("empty string with required", func(t *testing.T) {
+		type ValueEmailForm struct {
+			Email string `layrz:"email,required"`
+		}
+		form := &ValueEmailForm{Email: ""}
+		errs := Validate(form)
+
+		// Should have "empty" error, NOT "required"
+		if fieldErrs, ok := errs["email"]; !ok {
+			t.Errorf("expected error for email field")
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
+		}
+	})
+
+	t.Run("invalid email format", func(t *testing.T) {
+		type ValueEmailForm struct {
+			Email string `layrz:"email,required"`
+		}
+		form := &ValueEmailForm{Email: "nope"}
+		errs := Validate(form)
+
+		if fieldErrs, ok := errs["email"]; !ok {
+			t.Errorf("expected error for email field")
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+			t.Errorf("expected invalid error, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("valid email", func(t *testing.T) {
+		type ValueEmailForm struct {
+			Email string `layrz:"email,required"`
+		}
+		form := &ValueEmailForm{Email: "test@example.com"}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors, got %v", errs)
+		}
+	})
+}
+
+// TestValueFieldNumber tests number validation with non-pointer numeric fields.
+func TestValueFieldNumber(t *testing.T) {
+	t.Run("int with required and min_value constraint", func(t *testing.T) {
+		type ValueNumberForm struct {
+			Count int `layrz:"number,required,min_value=1"`
+		}
+		form := &ValueNumberForm{Count: 0}
+		errs := Validate(form)
+
+		// Should have "minValue" error, NOT "required"
+		if fieldErrs, ok := errs["count"]; !ok {
+			t.Errorf("expected error for count field")
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minValue" {
+			t.Errorf("expected minValue error, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("int within valid range", func(t *testing.T) {
+		type ValueNumberForm struct {
+			Count int `layrz:"number,required,min_value=1,max_value=10"`
+		}
+		form := &ValueNumberForm{Count: 5}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors, got %v", errs)
+		}
+	})
+
+	t.Run("float64 with required", func(t *testing.T) {
+		type ValueNumberForm struct {
+			Price float64 `layrz:"number,required,datatype=float,min_value=0"`
+		}
+		form := &ValueNumberForm{Price: 19.99}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors, got %v", errs)
+		}
+	})
+}
+
+// TestValueFieldBool tests bool validation with non-pointer bool fields.
+func TestValueFieldBool(t *testing.T) {
+	t.Run("false bool with required", func(t *testing.T) {
+		type ValueBoolForm struct {
+			Active bool `layrz:"bool,required"`
+		}
+		form := &ValueBoolForm{Active: false}
+		errs := Validate(form)
+
+		// Should have NO errors (false is a valid present bool)
+		if len(errs) > 0 {
+			t.Errorf("expected no errors for false bool, got %v", errs)
+		}
+	})
+
+	t.Run("true bool with required", func(t *testing.T) {
+		type ValueBoolForm struct {
+			Active bool `layrz:"bool,required"`
+		}
+		form := &ValueBoolForm{Active: true}
+		errs := Validate(form)
+
+		// Should have NO errors
+		if len(errs) > 0 {
+			t.Errorf("expected no errors for true bool, got %v", errs)
+		}
+	})
+}
+
+// TestValueFieldJSON tests JSON validation with non-pointer slice/map fields.
+func TestValueFieldJSON(t *testing.T) {
+	t.Run("nil slice with datatype=list and empty=false", func(t *testing.T) {
+		type ValueJSONForm struct {
+			Tags []any `layrz:"json,datatype=list"`
+		}
+		form := &ValueJSONForm{Tags: nil}
+		errs := Validate(form)
+
+		// A nil slice (zero value) in a value field is present but empty
+		// empty=false should emit "invalid"
+		if fieldErrs, ok := errs["tags"]; !ok {
+			t.Errorf("expected error for tags field")
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+			t.Errorf("expected invalid error for nil slice, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("empty slice with datatype=list and empty=false", func(t *testing.T) {
+		type ValueJSONForm struct {
+			Tags []any `layrz:"json,datatype=list"`
+		}
+		form := &ValueJSONForm{Tags: []any{}}
+		errs := Validate(form)
+
+		// empty slice with empty=false should emit "invalid"
+		if fieldErrs, ok := errs["tags"]; !ok {
+			t.Errorf("expected error for tags field")
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+			t.Errorf("expected invalid error for empty slice, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("non-empty slice with datatype=list", func(t *testing.T) {
+		type ValueJSONForm struct {
+			Tags []any `layrz:"json,datatype=list"`
+		}
+		form := &ValueJSONForm{Tags: []any{"x", "y"}}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors for non-empty slice, got %v", errs)
+		}
+	})
+
+	t.Run("nil map with datatype=dict and empty=false", func(t *testing.T) {
+		type ValueJSONForm struct {
+			Metadata map[string]any `layrz:"json,datatype=dict"`
+		}
+		form := &ValueJSONForm{Metadata: nil}
+		errs := Validate(form)
+
+		// A nil map (zero value) in a value field is present but empty
+		// empty=false should emit "invalid"
+		if fieldErrs, ok := errs["metadata"]; !ok {
+			t.Errorf("expected error for metadata field")
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+			t.Errorf("expected invalid error for nil map, got %v", fieldErrs)
+		}
+	})
+
+	t.Run("non-empty map with datatype=dict", func(t *testing.T) {
+		type ValueJSONForm struct {
+			Metadata map[string]any `layrz:"json,datatype=dict"`
+		}
+		form := &ValueJSONForm{Metadata: map[string]any{"key": "value"}}
+		errs := Validate(form)
+
+		if len(errs) > 0 {
+			t.Errorf("expected no errors for non-empty map, got %v", errs)
+		}
+	})
+}
+
+// TestMixedPointerValueFields tests a struct with both pointer and value scalar fields.
+func TestMixedPointerValueFields(t *testing.T) {
+	type MixedForm struct {
+		// Value fields (always present)
+		Name  string `layrz:"char,required,min_length=1"`
+		Count int    `layrz:"number,required,min_value=1"`
+
+		// Pointer fields (can be absent)
+		OptionalEmail *string `layrz:"email,required"`
+		OptionalFlag  *bool   `layrz:"bool,required"`
+	}
+
+	form := &MixedForm{
+		Name:          "", // zero value, not absent
+		Count:         0,  // zero value, not absent
+		OptionalEmail: nil,
+		OptionalFlag:  nil,
+	}
+
+	errs := Validate(form)
+
+	// Value fields should emit validation errors (not required, but actual validation)
+	if _, ok := errs["name"]; !ok {
+		t.Errorf("expected error for name value field (empty string)")
+	}
+	if _, ok := errs["count"]; !ok {
+		t.Errorf("expected error for count value field (min_value violation)")
+	}
+
+	// Pointer fields should emit required errors
+	if _, ok := errs["optionalEmail"]; !ok {
+		t.Errorf("expected required error for optionalEmail pointer field")
+	}
+	if _, ok := errs["optionalFlag"]; !ok {
+		t.Errorf("expected required error for optionalFlag pointer field")
+	}
+}
+
+// TestValueFieldInSubform tests value scalar fields inside a subform.
+func TestValueFieldInSubform(t *testing.T) {
+	type Address struct {
+		Street string `layrz:"char,required,min_length=5"`
+	}
+
+	type AddressForm struct {
+		Addr *Address `layrz:"subform"`
+	}
+
+	form := &AddressForm{
+		Addr: &Address{Street: "Main"},
+	}
+
+	errs := Validate(form)
+
+	// Should have error keyed as "addr.street"
+	if fieldErrs, ok := errs["addr.street"]; !ok {
+		t.Errorf("expected error for addr.street, got keys: %v", errs.Keys())
+	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+		t.Errorf("expected minLength error in subform, got %v", fieldErrs)
+	}
+}
+
+// TestValueFieldInSubformList tests value scalar fields inside a subform_list.
+func TestValueFieldInSubformList(t *testing.T) {
+	type Item struct {
+		Name string `layrz:"char,required,min_length=3"`
+	}
+
+	type OrderForm struct {
+		Items []Item `layrz:"subform_list"`
+	}
+
+	form := &OrderForm{
+		Items: []Item{
+			{Name: "Valid Item"},
+			{Name: "X"}, // too short
+		},
+	}
+
+	errs := Validate(form)
+
+	// Should have error keyed as "items.1.name"
+	if fieldErrs, ok := errs["items.1.name"]; !ok {
+		t.Errorf("expected error for items.1.name, got keys: %v", errs.Keys())
+	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+		t.Errorf("expected minLength error in subform_list element, got %v", fieldErrs)
+	}
+}
+
+// ValueFieldFormWithClean has a value field and a Convention A clean method.
+type ValueFieldFormWithClean struct {
+	Code string `layrz:"char,required"`
+}
+
+// CleanCode implements Convention A clean method for Code field (value field).
+func (f *ValueFieldFormWithClean) CleanCode(value string) *FieldError {
+	if value != "ALLOWED" {
+		return &FieldError{Code: "notAllowed"}
+	}
+	return nil
+}
+
+// TestValueFieldCleanMethod tests Convention A clean methods with value fields.
+func TestValueFieldCleanMethod(t *testing.T) {
+	form := &ValueFieldFormWithClean{Code: "DENIED"}
+	errs := Validate(form)
+
+	if fieldErrs, ok := errs["code"]; !ok {
+		t.Errorf("expected error for code field")
+	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "notAllowed" {
+		t.Errorf("expected notAllowed error from clean method, got %v", fieldErrs)
+	}
+}
