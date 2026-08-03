@@ -46,13 +46,27 @@
     "field": "EmailField",
     "kwargs": {"required": true, "empty": false},
     "value": "",
-    "expected_errors": [{"code": "required"}]
+    "expected_errors": [{"code": "empty"}]
   },
   {
     "name": "email_empty_string_empty_true",
     "field": "EmailField",
     "kwargs": {"required": false, "empty": true},
     "value": "",
+    "expected_errors": []
+  },
+  {
+    "name": "email_invalid_format_empty_true",
+    "field": "EmailField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "not-an-email",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "email_valid_empty_true",
+    "field": "EmailField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "user@example.com",
     "expected_errors": []
   },
   {

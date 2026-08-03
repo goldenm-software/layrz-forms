@@ -54,5 +54,12 @@
     "kwargs": {"required": true},
     "value": 1,
     "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "bool_invalid_type_required_false",
+    "field": "BooleanField",
+    "kwargs": {"required": false},
+    "value": "true",
+    "expected_errors": [{"code": "invalid"}]
   }
 ]

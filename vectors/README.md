@@ -2,6 +2,18 @@
 
 This directory contains cross-language test vectors for form field validation. These vectors are designed to be consumed by test suites in any language (Python, Go, etc.) to ensure consistent behavior across implementations.
 
+## Corrected Semantics
+
+These vectors encode the **corrected validation semantics** satisfied by the Go implementation (`/go/`). The Python implementation (`/python/`) still contains known bugs listed in its CHANGELOG and therefore fails a small number of these cases; aligning Python is deferred to a future 4.0.0 release.
+
+Specific corrections applied:
+
+- **Absent optional field**: No errors (not `invalid`).
+- **Wrong type**: Always `invalid`, regardless of `required`.
+- **Empty string with `empty: false`**: Emits `empty` (not `required`); consistent with `CharField`.
+- **Empty string with `empty: true`**: Permits `""` but still regex-validates non-empty values.
+- **Boolean type**: Never valid as a number or ID (`isinstance(True, int)` ignored).
+
 ## Schema
 
 Each field type has a JSON file containing an array of test cases. The schema for each test case is:

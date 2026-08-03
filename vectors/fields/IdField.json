@@ -74,7 +74,7 @@
     "field": "IdField",
     "kwargs": {"required": false},
     "value": 1.5,
-    "expected_errors": []
+    "expected_errors": [{"code": "invalid"}]
   },
   {
     "name": "id_invalid_list_required_true",
@@ -102,6 +102,13 @@
     "field": "IdField",
     "kwargs": {"required": false},
     "value": {"a": 1},
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_rejects_bool",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": true,
     "expected_errors": [{"code": "invalid"}]
   }
 ]

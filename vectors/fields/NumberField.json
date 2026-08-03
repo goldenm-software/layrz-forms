@@ -96,5 +96,26 @@
     "kwargs": {"required": true, "datatype": "int"},
     "value": "not a number",
     "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_int_rejects_bool_true",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": true,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_int_rejects_bool_false",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": false,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_float_rejects_bool",
+    "field": "NumberField",
+    "kwargs": {"required": false, "datatype": "float"},
+    "value": true,
+    "expected_errors": [{"code": "invalid"}]
   }
 ]

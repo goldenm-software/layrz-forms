@@ -11,7 +11,7 @@
     "field": "JsonField",
     "kwargs": {"required": false, "datatype": "dict"},
     "value_absent": true,
-    "expected_errors": [{"code": "invalid"}]
+    "expected_errors": []
   },
   {
     "name": "json_dict_populated",
@@ -60,7 +60,7 @@
     "field": "JsonField",
     "kwargs": {"required": false, "datatype": "list"},
     "value_absent": true,
-    "expected_errors": [{"code": "invalid"}]
+    "expected_errors": []
   },
   {
     "name": "json_list_populated",
