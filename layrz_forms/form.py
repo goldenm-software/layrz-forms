@@ -90,7 +90,7 @@ class Form:
         continue
 
       if isinstance(item[1], Form):
-        self._sub_forms_attrs[item[0]] = cast(Self, item[1])  # type: ignore
+        self._sub_forms_attrs[item[0]] = cast(Self, item[1])
         continue
 
   @property
@@ -125,7 +125,7 @@ class Form:
     for attr, form in self._sub_forms_attrs.items():
       self._validate_sub_form(
         field=attr,
-        form=form,  # type: ignore
+        form=form,
         data=self._obj.get(attr, {}),
       )
 
@@ -137,7 +137,7 @@ class Form:
           data=self._obj.get(nattr, {}),
         )
       else:
-        self._validate_sub_form_as_list(field=nattr, form=nform[0])  # type: ignore
+        self._validate_sub_form_as_list(field=nattr, form=nform[0])
 
     for func in self._clean_functions:
       await self._clean_async(clean_func=func)
@@ -158,7 +158,7 @@ class Form:
     for attr, form in self._sub_forms_attrs.items():
       self._validate_sub_form(
         field=attr,
-        form=form,  # type: ignore
+        form=form,
         data=self._obj.get(attr, {}),
       )
 
@@ -170,7 +170,7 @@ class Form:
           data=self._obj.get(nattr, {}),
         )
       else:
-        self._validate_sub_form_as_list(field=nattr, form=nform[0])  # type: ignore
+        self._validate_sub_form_as_list(field=nattr, form=nform[0])
 
     for func in self._clean_functions:
       self._clean_sync(clean_func=func)
@@ -208,9 +208,9 @@ class Form:
     new_error = {'code': code}
     if extra_args and isinstance(extra_args, dict):
       if callable(extra_args):
-        new_error.update(extra_args())
+        new_error.update(extra_args())  # type: ignore
       else:
-        new_error.update(extra_args)  # type: ignore
+        new_error.update(extra_args)
 
     self._errors[camel_key].append(new_error)
 

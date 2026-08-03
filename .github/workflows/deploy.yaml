@@ -64,10 +64,6 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           packages-dir: ./dist
-          repository-url: https://api.layrz.com/pypi/simple
-          user: ""
-          password: ""
-          attestations: false
 
   create-release:
     needs: deploy-python
