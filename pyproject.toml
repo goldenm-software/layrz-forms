@@ -1,6 +1,6 @@
 [project]
 name = "layrz-forms"
-version = "2.1.11"
+version = "2.1.14"
 description = "Layrz forms and tools for Python"
 authors = [{ name = "Golden M, Inc.", email = "software@goldenm.com" }]
 requires-python = ">=3.11"
@@ -39,6 +39,7 @@ dev = [
   "python-dotenv>=1.0.1",
   "ruff>=0.9.8",
   "twine>=6.1.0",
+  "ty>=0.0.65",
 ]
 
 [tool.ruff]

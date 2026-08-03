@@ -1,0 +1,26 @@
+name: "Checks"
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: goldenm-software/layrz-actions/.github/actions/check-python@v1
+
+  changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - uses: goldenm-software/layrz-actions/.github/actions/changelog@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          post-comment: true

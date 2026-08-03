@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.12
+
+- Add `regex` to `CharField`
+
 ## 2.1.10
 
 - Add `TypeError` to `NumberField`
