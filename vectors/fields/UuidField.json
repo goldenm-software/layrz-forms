@@ -1,0 +1,72 @@
+[
+  {
+    "name": "uuid_absent_required_true",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}, {"code": "invalid"}]
+  },
+  {
+    "name": "uuid_absent_required_false",
+    "field": "UuidField",
+    "kwargs": {"required": false},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "uuid_valid_string",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "550e8400-e29b-41d4-a716-446655440000",
+    "expected_errors": []
+  },
+  {
+    "name": "uuid_valid_string_uppercase",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "550E8400-E29B-41D4-A716-446655440000",
+    "expected_errors": []
+  },
+  {
+    "name": "uuid_valid_string_no_hyphens",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "550e8400e29b41d4a716446655440000",
+    "expected_errors": []
+  },
+  {
+    "name": "uuid_invalid_malformed",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "not-a-uuid",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "uuid_invalid_partial",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "550e8400-e29b-41d4",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "uuid_invalid_empty_string",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": "",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "uuid_invalid_int",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": 123,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "uuid_invalid_list",
+    "field": "UuidField",
+    "kwargs": {"required": true},
+    "value": [],
+    "expected_errors": [{"code": "invalid"}]
+  }
+]

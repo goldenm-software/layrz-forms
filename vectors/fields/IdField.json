@@ -1,0 +1,107 @@
+[
+  {
+    "name": "id_absent_required_true",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}]
+  },
+  {
+    "name": "id_absent_required_false",
+    "field": "IdField",
+    "kwargs": {"required": false},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "id_valid_positive_int",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": 42,
+    "expected_errors": []
+  },
+  {
+    "name": "id_valid_positive_str",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": "123",
+    "expected_errors": []
+  },
+  {
+    "name": "id_invalid_zero",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": 0,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_negative",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": -5,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_negative_str",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": "-42",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_non_numeric_string_required_true",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": "abc",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_non_numeric_string_required_false",
+    "field": "IdField",
+    "kwargs": {"required": false},
+    "value": "abc",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_float_required_true",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": 3.14,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_float_required_false",
+    "field": "IdField",
+    "kwargs": {"required": false},
+    "value": 1.5,
+    "expected_errors": []
+  },
+  {
+    "name": "id_invalid_list_required_true",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": [],
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_list_required_false",
+    "field": "IdField",
+    "kwargs": {"required": false},
+    "value": [1, 2],
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_dict_required_true",
+    "field": "IdField",
+    "kwargs": {"required": true},
+    "value": {},
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "id_invalid_dict_required_false",
+    "field": "IdField",
+    "kwargs": {"required": false},
+    "value": {"a": 1},
+    "expected_errors": [{"code": "invalid"}]
+  }
+]
