@@ -1,5 +1,77 @@
 # Changelog
 
+## 3.0.0
+
+### Breaking changes
+
+- **`Form.errors` is now a property, not a method**: Access as `form.errors` instead of `form.errors()`. The property lazily validates on first access — if `is_valid()` hasn't been called, reading `.errors` runs synchronous validation automatically. Reassigning `form.obj` or calling `calculate_members()` invalidates cached errors.
+
+- **Error entries are now `LayrzError` Pydantic models, not plain dicts**: `form.errors` returns `dict[str, list[LayrzError]]`. Each `LayrzError` has four fields: `code` (str, always set), `expected` (Any), `received` (Any), and `extra` (dict|None for custom keys). `model_dump()` defaults to `exclude_none=True`; use `exclude_none=False` to include unset fields. The model is `extra='forbid'` — unknown constructor kwargs raise.
+
+- **`add_errors()` extra_args routing**: The `key`, `code` signature remains unchanged, but `extra_args` dict keys `expected` and `received` are now lifted into their own fields; all other keys nest under `extra`. Example: `self.add_errors('password', 'weak', extra_args={'min_length': 8})` produces `LayrzError(code='weak', extra={'min_length': 8})`.
+
+- **`is_valid_async()` renamed to `ais_valid()`**: Use the `a`-prefix async convention (e.g. `await form.ais_valid()` instead of `await form.is_valid_async()`). The old name is removed entirely; no alias exists.
+
+- **Async clean functions + lazy property caveat**: Forms with `async def clean_*` methods raise `RuntimeError` if `.errors` is read without awaiting `ais_valid()` first. Always use: `await form.ais_valid()` then `form.errors`.
+
+- **`CharField` now validates type**: Previously accepted non-string types (lists, dicts, numbers) and silently length-checked them. Now emits `{'code': 'invalid'}` for any present non-string value (except `Enum`/`StrEnum` members, which still convert to strings). Impacts forms accepting arbitrary input without type validation.
+
+- **`IdField` validation robustness**: Now emits `{'code': 'invalid'}` instead of raising `ValueError` for non-numeric strings like `'abc'`, and instead of raising `TypeError` when comparing non-comparable types on optional fields.
+
+- **Empty list class attributes**: Forms declaring empty list class attributes (e.g. `empty_attr = []`) previously raised `IndexError`; now silently skipped during validation.
+
+- **Plain `list` class attributes no longer misinterpreted as nested form declarations** (breaking): Only lists whose first element is a `Field` or `Form` instance are now treated as nested declarations. Plain lists (e.g., `colors = ['red', 'green']`, `choices = [1, 2, 3]`) are ignored. Previously, all list attributes were claimed as nested declarations.
+
+- **Non-list values for nested list fields now report errors** (breaking): When a form attribute is declared as a nested list (e.g., `tags = [CharField()]`) and a non-list value (dict, string, number, etc.) is supplied, a validation error `{'code': 'invalid', 'extra': {'message': 'Invalid data type'}}` is now emitted. Previously, such values were silently skipped.
+
+- **`cleaned_data` now returns a deep copy** (breaking): Previously, `form.cleaned_data` returned the internal object by reference, so mutations would leak to the caller's original dict. Now `cleaned_data` returns a `copy.deepcopy()`, ensuring full isolation at any nesting depth. This can fail if the payload contains non-serializable objects; such failures propagate naturally (are not silently caught).
+
+### Fixed
+
+- 49 uncaught exceptions across 7 field types eliminated (9 new validation errors added in their place, all emitted as `{'code': 'invalid'}`). Forms accepting untrusted input are now crash-proof.
+
+- **`BooleanField` now rejects wrong types for optional fields**: Previously, optional `BooleanField` instances silently accepted non-bool values. Now `isinstance(value, bool)` is enforced regardless of `required` status. Any present non-bool value emits `{'code': 'invalid'}`.
+
+- **`EmailField` now emits `'empty'` for empty strings**: Previously emitted `'required'` (inconsistent with `CharField`). Now `value == ''` with `not self.empty` correctly emits `{'code': 'empty'}`.
+
+- **`EmailField(empty=True)` now validates non-empty emails**: Previously skipped regex validation entirely when `empty=True`, so invalid emails passed. Now accepts `''` without regex, but validates all non-empty strings with regex regardless of `empty` setting.
+
+- **`IdField` now rejects booleans**: Previously, `isinstance(True, int)` caused `IdField` to accept `True`. Now explicit `isinstance(value, bool)` check rejects booleans before int/str validation. Optional fields with wrong types now also emit `{'code': 'invalid'}`.
+
+- **`JsonField` now accepts absent optional fields**: Previously, absent optional `JsonField` instances emitted `{'code': 'invalid'}` when `required=False`. Now returns with no errors (only `required` error is emitted for absent required fields).
+
+- **`NumberField` now rejects wrong types for optional fields and booleans**: Previously, optional `NumberField` silently accepted wrong types. Now enforces `isinstance(value, self.datatype)` regardless of `required` status. Explicit `isinstance(value, bool)` check rejects booleans before type checks (since `isinstance(True, int)` is `True` in Python).
+
+- **Nested form error dictionaries are now copied, not shared**: When a parent form merges error dictionaries from child forms, each error is now copied via `LayrzError.model_copy()` before merging. This prevents any future mutations to the parent's error dict from affecting the child form's errors (and vice versa).
+
+### Added
+
+- **`LayrzError` Pydantic model** (module: `layrz_forms/errors.py`): The new error representation with four fields (`code`, `expected`, `received`, `extra`). Exported from `layrz_forms.__init__`.
+
+- **Error type aliases** (module: `layrz_forms/types.py`):
+  - `ErrorType`: A single `LayrzError`.
+  - `ErrorsType`: The full mapping, `dict[str, list[LayrzError]]`.
+  Both exported from `layrz_forms.__init__`.
+
+- **New internal modules** for cleaner architecture:
+  - `casing.py`: centralized `to_camel_case(key)` function (replaces duplicated `_convert_to_camel()` methods; originals retained for backwards compatibility).
+  - `introspection.py`: member discovery via `discover_members()` returning a `MemberDiscovery` dataclass; uses `inspect.getmembers_static()` to avoid side effects when introspecting the new `errors` property. `Form.calculate_members()` remains the public API.
+  - `validators.py`: module-level `_validate_field`, `_validate_sub_form`, `_validate_sub_form_as_list` functions extracted from `Form` for clarity.
+
+- **Test suite**: 258 tests achieving 98% coverage (pytest + pytest-asyncio + pytest-cov).
+
+- **Cross-language test vectors**: `vectors/fields/*.json` with 89 cases across the seven field types, to be shared with the future Go implementation.
+
+### Internal
+
+- Consolidated 25 duplicated lines in `is_valid()` / `is_valid_async()` into shared helper.
+- Six mutable class-level attributes promoted to instance attributes; annotations remain at class level.
+- Removed unreachable code: `callable(extra_args)` branch (dict never callable), `value is None` inside `isinstance(value, str)` branch, `isinstance(self.datatype(), dict)` replaced with `issubclass`.
+
+### Defined behavior
+
+- **Clean methods execute in alphabetical order**: All `clean_*` methods are discovered via `inspect.getmembers_static()`, which returns members in alphabetical order by name. This is stable, intentional, and matches the Go implementation (where declaration order is not available via reflection). The order is documented in `README.md`.
+
 ## 2.1.12
 
 - Add `regex` to `CharField`

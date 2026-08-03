@@ -2,8 +2,13 @@ name: "Checks"
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ main, next, development ]
     types: [ opened, synchronize, reopened ]
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
 
 jobs:
   lint-python:
@@ -12,13 +17,64 @@ jobs:
       - uses: actions/checkout@v6
 
       - uses: goldenm-software/layrz-actions/.github/actions/check-python@v1
+        id: check-python
+        with:
+          working-directory: ./python
+          run-type-check: true
+          run-tests: true
+          coverage-library: 'layrz_forms'
+          artifact-name: 'python-coverage-${{ github.run_id }}'
+
+  lint-go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: goldenm-software/layrz-actions/.github/actions/check-go@v1
+        id: check-go
+        with:
+          working-directory: ./go
+          go-version: '1.26.2'
+          run-tests: true
+          artifact-name: 'go-coverage-${{ github.run_id }}'
+
+  coverage:
+    needs: [lint-python, lint-go]
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Python coverage artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: python-coverage-${{ github.run_id }}
+          path: python-coverage
+
+      - name: Download Go coverage artifacts
+        uses: actions/download-artifact@v8
+        with:
+          name: go-coverage-${{ github.run_id }}
+          path: go-coverage
+
+      - uses: goldenm-software/layrz-actions/.github/actions/coverage-comment@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          enable-python: true
+          python-coverage-path: python-coverage/lcov.info
+          enable-go: true
+          go-coverage-path: go-coverage/lcov.info
+
+      - uses: goldenm-software/layrz-actions/.github/actions/coverage-check@v1
+        with:
+          enable-python: true
+          python-coverage-path: python-coverage/lcov.info
+          enable-go: true
+          go-coverage-path: go-coverage/lcov.info
+          threshold: '90'
 
   changelog:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
+        with: { fetch-depth: 0 }
 
       - uses: goldenm-software/layrz-actions/.github/actions/changelog@v1
         with:

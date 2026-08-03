@@ -1,0 +1,79 @@
+[
+  {
+    "name": "email_absent_required_true",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}, {"code": "invalid"}]
+  },
+  {
+    "name": "email_absent_required_false",
+    "field": "EmailField",
+    "kwargs": {"required": false},
+    "value_absent": true,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "email_valid",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value": "test@example.com",
+    "expected_errors": []
+  },
+  {
+    "name": "email_valid_plus_addressing",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value": "test+tag@example.com",
+    "expected_errors": []
+  },
+  {
+    "name": "email_invalid_no_at",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value": "notanemail.com",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "email_invalid_no_tld",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value": "test@example",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "email_empty_string_empty_false_required_true",
+    "field": "EmailField",
+    "kwargs": {"required": true, "empty": false},
+    "value": "",
+    "expected_errors": [{"code": "empty"}]
+  },
+  {
+    "name": "email_empty_string_empty_true",
+    "field": "EmailField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "",
+    "expected_errors": []
+  },
+  {
+    "name": "email_invalid_format_empty_true",
+    "field": "EmailField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "not-an-email",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "email_valid_empty_true",
+    "field": "EmailField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "user@example.com",
+    "expected_errors": []
+  },
+  {
+    "name": "email_invalid_int",
+    "field": "EmailField",
+    "kwargs": {"required": true},
+    "value": 123,
+    "expected_errors": [{"code": "invalid"}]
+  }
+]

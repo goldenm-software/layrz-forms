@@ -1,0 +1,65 @@
+[
+  {
+    "name": "boolean_absent_required_true",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}]
+  },
+  {
+    "name": "boolean_absent_required_false",
+    "field": "BooleanField",
+    "kwargs": {"required": false},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "boolean_none_required_true",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value": null,
+    "expected_errors": [{"code": "required"}]
+  },
+  {
+    "name": "boolean_none_required_false",
+    "field": "BooleanField",
+    "kwargs": {"required": false},
+    "value": null,
+    "expected_errors": []
+  },
+  {
+    "name": "boolean_true",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value": true,
+    "expected_errors": []
+  },
+  {
+    "name": "boolean_false",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value": false,
+    "expected_errors": []
+  },
+  {
+    "name": "boolean_invalid_string_required_true",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value": "not_bool",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "boolean_invalid_int_required_true",
+    "field": "BooleanField",
+    "kwargs": {"required": true},
+    "value": 1,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "bool_invalid_type_required_false",
+    "field": "BooleanField",
+    "kwargs": {"required": false},
+    "value": "true",
+    "expected_errors": [{"code": "invalid"}]
+  }
+]
