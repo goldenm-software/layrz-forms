@@ -90,6 +90,10 @@ self.add_errors('password', 'weak_password', extra_args={'min_length': 8})
 
 **Async clean functions caveat:** If your form has `async def clean_*` methods, you must await `form.ais_valid()` before reading `form.errors`. Reading `.errors` without awaiting `ais_valid()` raises `RuntimeError`.
 
+## Clean Methods
+
+All methods named with the `clean_*` prefix are automatically discovered and executed after field validation. They are executed in **alphabetical order by method name** (e.g., `clean_apple`, then `clean_banana`, then `clean_zebra`). This behavior is stable and intentional to match the Go implementation, where declaration order is not available via reflection.
+
 ## FAQ
 
 ### Do you have other libraries?

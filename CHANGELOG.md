@@ -20,6 +20,12 @@
 
 - **Empty list class attributes**: Forms declaring empty list class attributes (e.g. `empty_attr = []`) previously raised `IndexError`; now silently skipped during validation.
 
+- **Plain `list` class attributes no longer misinterpreted as nested form declarations** (breaking): Only lists whose first element is a `Field` or `Form` instance are now treated as nested declarations. Plain lists (e.g., `colors = ['red', 'green']`, `choices = [1, 2, 3]`) are ignored. Previously, all list attributes were claimed as nested declarations.
+
+- **Non-list values for nested list fields now report errors** (breaking): When a form attribute is declared as a nested list (e.g., `tags = [CharField()]`) and a non-list value (dict, string, number, etc.) is supplied, a validation error `{'code': 'invalid', 'extra': {'message': 'Invalid data type'}}` is now emitted. Previously, such values were silently skipped.
+
+- **`cleaned_data` now returns a deep copy** (breaking): Previously, `form.cleaned_data` returned the internal object by reference, so mutations would leak to the caller's original dict. Now `cleaned_data` returns a `copy.deepcopy()`, ensuring full isolation at any nesting depth. This can fail if the payload contains non-serializable objects; such failures propagate naturally (are not silently caught).
+
 ### Fixed
 
 - 49 uncaught exceptions across 7 field types eliminated (9 new validation errors added in their place, all emitted as `{'code': 'invalid'}`). Forms accepting untrusted input are now crash-proof.
@@ -35,6 +41,8 @@
 - **`JsonField` now accepts absent optional fields**: Previously, absent optional `JsonField` instances emitted `{'code': 'invalid'}` when `required=False`. Now returns with no errors (only `required` error is emitted for absent required fields).
 
 - **`NumberField` now rejects wrong types for optional fields and booleans**: Previously, optional `NumberField` silently accepted wrong types. Now enforces `isinstance(value, self.datatype)` regardless of `required` status. Explicit `isinstance(value, bool)` check rejects booleans before type checks (since `isinstance(True, int)` is `True` in Python).
+
+- **Nested form error dictionaries are now copied, not shared**: When a parent form merges error dictionaries from child forms, each error is now copied via `LayrzError.model_copy()` before merging. This prevents any future mutations to the parent's error dict from affecting the child form's errors (and vice versa).
 
 ### Added
 
@@ -54,21 +62,15 @@
 
 - **Cross-language test vectors**: `vectors/fields/*.json` with 89 cases across the seven field types, to be shared with the future Go implementation.
 
-### Known issues
-
-The following issues are pinned by tests and slated for follow-up releases:
-
-- Parent form mutates child form's error dicts (via `del error['code']`).
-- Non-list value supplied for nested list is silently skipped with no error.
-- Any `list` class attribute is claimed as a nested-form declaration.
-- `cleaned_data` returned by reference (mutations leak to caller's original dict).
-- `clean*` methods run in alphabetical order, not declaration order.
-
 ### Internal
 
 - Consolidated 25 duplicated lines in `is_valid()` / `is_valid_async()` into shared helper.
 - Six mutable class-level attributes promoted to instance attributes; annotations remain at class level.
 - Removed unreachable code: `callable(extra_args)` branch (dict never callable), `value is None` inside `isinstance(value, str)` branch, `isinstance(self.datatype(), dict)` replaced with `issubclass`.
+
+### Defined behavior
+
+- **Clean methods execute in alphabetical order**: All `clean_*` methods are discovered via `inspect.getmembers_static()`, which returns members in alphabetical order by name. This is stable, intentional, and matches the Go implementation (where declaration order is not available via reflection). The order is documented in `README.md`.
 
 ## 2.1.12
 
