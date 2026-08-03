@@ -3,96 +3,88 @@
 [![PyPI](https://img.shields.io/pypi/v/layrz_forms.svg)](https://pypi.org/project/layrz-forms/)
 [![GitHub license](https://img.shields.io/github/license/goldenm-software/layrz-forms?logo=github)](https://github.com/goldenm-software/layrz-forms)
 
-A collection of tools that we use to make django developers life easier. I hope you find them useful too.
+Form validation for Python and Go — a simpler alternative to Django Forms, implemented twice against
+one shared spec.
 
-Tired of complex forms validations? The default Django schema is too complex? Layrz Forms is for you! Works like Django Forms but with a simpler API and more features. Highly personalizable and extensible, you can use it in your projects without any problem.
+Tired of complex form validations? Layrz Forms validates dicts, plain objects, Strawberry GraphQL
+inputs and Go structs with a small API, and gives you the same error output in both languages.
 
-```python
-import layrz_forms as forms
+## Pick your language
 
+This is a monorepo. Each implementation documents itself:
 
-class ExampleForm(forms.Form):
-  """ Example form """
-  id_test = forms.IdField(required=True)
-  email_text = forms.EmailField(required=True)
-  json_list_test = forms.JsonField(required=True, datatype=list)
-  json_dict_test = forms.JsonField(required=True, datatype=dict)
-  int_test = forms.NumberField(required=True, datatype=int, min_value=0, max_value=5)
-  float_test = forms.NumberField(required=True, datatype=float, min_value=0, max_value=5)
-  bool_test = forms.BooleanField(required=True)
-  plain_text_test = forms.CharField(required=True, empty=False)
-  empty_text_test = forms.CharField(required=True, empty=True)
-  range_text_test = forms.CharField(required=True, empty=False, min_length=5, max_length=10)
+| | Package | Documentation |
+|---|---|---|
+| **Python** | `pip install layrz-forms` | **[python/README.md](python/README.md)** |
+| **Go** | `go get github.com/goldenm-software/layrz-forms/go/v3` | **[go/README.md](go/README.md)** |
 
-  def clean_func1(self):
-    """ Print clean """
-    self.add_errors(key='clean1', code='error1')
-    self.add_errors(key='clean1', code='error2')
+Start there — the two APIs are shaped differently, and each README is the full reference for its
+language.
 
-  def clean_func2(self):
-    self.add_errors(key='clean2', code='error1')
+## Repository layout
 
-
-if __name__ == '__main__':
-  obj = {
-    'id_test': 1,
-    'email_text': 'example@goldenmcorp.com',
-    'json_dict_test': {
-      'hola': 'mundo'
-    },
-    'json_list_test': ['hola mundo'],
-    'int_test': 5,
-    'float_test': 4.5,
-    'bool_test': True,
-    'plain_text_test': 'hola mundo',
-    'empty_text_test': 'hola',
-    'range_text_test': 'hola'
-  }
-
-  form = ExampleForm(obj)
-
-  print('form.is_valid():', form.is_valid())
-  #> form.is_valid(): False
-  print('form.errors:', form.errors)
-  #> form.errors: {'rangeTextTest': [LayrzError(code='minLength', expected=5, received=4, extra=None)], 'clean1': [LayrzError(code='error1', expected=None, received=None, extra=None), LayrzError(code='error2', expected=None, received=None, extra=None)], 'clean2': [LayrzError(code='error1', expected=None, received=None, extra=None)]}
-
-  # Convert to plain dicts for JSON serialization:
-  errors_as_dicts = {k: [e.model_dump() for e in v] for k, v in form.errors.items()}
-  print('errors_as_dicts:', errors_as_dicts)
-  #> errors_as_dicts: {'rangeTextTest': [{'code': 'minLength', 'expected': 5, 'received': 4}], 'clean1': [{'code': 'error1'}, {'code': 'error2'}], 'clean2': [{'code': 'error1'}]}
+```
+python/    Python library (layrz_forms) — the reference implementation
+go/        Go library (github.com/goldenm-software/layrz-forms/go/v3)
+vectors/   shared cross-language test vectors — the spec both sides satisfy
+.claude/   Claude Code plugin (see below)
 ```
 
-## Errors
+## One spec, two implementations
 
-Form errors are represented as `LayrzError` Pydantic models with four fields:
+Python declares fields as class attributes; Go uses `layrz:` struct tags parsed by reflection. The
+APIs differ by necessity — Go has no descriptors or metaclasses — but the observable behaviour is
+identical:
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `code` | `str` | Error code (e.g. `'required'`, `'minLength'`, `'invalidChoice'`) |
-| `expected` | `Any` | The constraint that was violated (e.g. `5`, `['a','b']`, a regex); `None` if not applicable |
-| `received` | `Any` | The offending value; `None` if not applicable |
-| `extra` | `dict\|None` | Additional context keys from custom validators; `None` if empty |
+- the same error codes (`required`, `invalid`, `empty`, `minLength`, `invalidChoice`, …)
+- camelCase keys, with dotted paths for nested values (`address.streetName`, `items.0.name`)
+- errors accumulate; nothing fails fast
 
-Access errors via the `form.errors` property (note: not a method). The property **lazily validates** on first access — if `is_valid()` hasn't been called, reading `.errors` runs synchronous validation automatically.
+That equivalence is enforced, not aspirational: `vectors/fields/*.json` holds 96 shared cases and
+**both** test suites run them. A change that breaks a vector in one language is a change that has
+diverged from the other.
 
-Serialize errors to plain dicts using `.model_dump()`, which excludes unset fields by default:
+## Claude Code skill
 
-```python
-{k: [e.model_dump() for e in v] for k, v in form.errors.items()}
+This repository includes a *Claude Code plugin* as part of our initiative to provide AI-assisted
+development tools. The plugin contains skills that guide developers in writing and debugging forms
+in either language: a `form-builder` router that detects which language you are working in, plus
+`py-form-builder` and `go-form-builder`, each documenting one implementation in full — every field
+argument and error code, custom validation hooks, nested structures, and the mistakes that actually
+come up. The Go skill also covers interoperating with `graph-gophers/graphql-go`.
+
+### Installation
+
+Add this repository as a Claude Code plugin marketplace, then install the plugin:
+
+```bash
+/plugin marketplace add goldenm-software/layrz-forms
 ```
 
-When adding custom errors via `self.add_errors(key, code, extra_args={...})`, keys `expected` and `received` are lifted into their own fields; all other keys nest under `extra`:
+Once the marketplace is added, install the plugin from the **Discover** tab in `/plugin`, or run:
 
-```python
-self.add_errors('password', 'weak_password', extra_args={'min_length': 8})
-# Produces: LayrzError(code='weak_password', extra={'min_length': 8})
+```bash
+/plugin install layrz-forms@layrz-forms
 ```
 
-**Async clean functions caveat:** If your form has `async def clean_*` methods, you must await `form.ais_valid()` before reading `form.errors`. Reading `.errors` without awaiting `ais_valid()` raises `RuntimeError`.
+Then reload your plugins:
 
-## Clean Methods
+```bash
+/reload-plugins
+```
 
-All methods named with the `clean_*` prefix are automatically discovered and executed after field validation. They are executed in **alphabetical order by method name** (e.g., `clean_apple`, then `clean_banana`, then `clean_zebra`). This behavior is stable and intentional to match the Go implementation, where declaration order is not available via reflection.
+## Development
+
+From the repository root, `make` runs both languages:
+
+```bash
+make checks          # lint, typecheck, build and test, Python and Go
+make test            # tests with coverage thresholds enforced
+make format          # ruff format + gofmt -w
+make install-hooks   # enable the pre-commit hook, which runs `make checks`
+```
+
+For a single language, use `make -C python <target>` or `make -C go <target>`.
 
 ## FAQ
 
