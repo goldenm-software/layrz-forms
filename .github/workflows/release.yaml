@@ -63,7 +63,6 @@ jobs:
 
       - name: Copy Markdown files
         run: |
-          cp ./README.md ./python/README.md
           cp ./LICENSE ./python/LICENSE
           cp ./CHANGELOG.md ./python/CHANGELOG.md
           cp ./CONTRIBUTING.md ./python/CONTRIBUTING.md
