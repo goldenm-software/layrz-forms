@@ -117,6 +117,8 @@ func validateStruct(ptrVal reflect.Value, prefix string, out Errors, depth int) 
 			if fieldVal.Kind() == reflect.Slice || fieldVal.Kind() == reflect.Array {
 				for j := 0; j < fieldVal.Len(); j++ {
 					elemVal := fieldVal.Index(j)
+					elemIndex := strconv.Itoa(j)
+					elemKey := key + "." + elemIndex
 
 					// Handle pointer elements
 					if elemVal.Kind() == reflect.Ptr {
@@ -124,10 +126,27 @@ func validateStruct(ptrVal reflect.Value, prefix string, out Errors, depth int) 
 							continue
 						}
 						// For pointer elements, use them directly
-						validateStruct(elemVal, key+"."+strconv.Itoa(j), out, depth+1)
+						validateStruct(elemVal, elemKey, out, depth+1)
+						// Also run clean methods on each element
+						elemStructType := elemVal.Type().Elem()
+						conventionA, conventionB, configErrors := discoverCleanMethods(elemVal, elemStructType)
+						for _, cfgErr := range configErrors {
+							out.Add(elemKey, cfgErr)
+						}
+						runConventionACleanWithPrefix(elemVal, elemKey, conventionA, out)
+						runConventionBCleanWithPrefix(elemVal, elemKey, conventionB, out)
 					} else {
 						// For non-pointer elements, take the address
-						validateStruct(elemVal.Addr(), key+"."+strconv.Itoa(j), out, depth+1)
+						elemAddr := elemVal.Addr()
+						validateStruct(elemAddr, elemKey, out, depth+1)
+						// Also run clean methods on each element (using the address)
+						elemStructType := elemAddr.Type().Elem()
+						conventionA, conventionB, configErrors := discoverCleanMethods(elemAddr, elemStructType)
+						for _, cfgErr := range configErrors {
+							out.Add(elemKey, cfgErr)
+						}
+						runConventionACleanWithPrefix(elemAddr, elemKey, conventionA, out)
+						runConventionBCleanWithPrefix(elemAddr, elemKey, conventionB, out)
 					}
 				}
 			}

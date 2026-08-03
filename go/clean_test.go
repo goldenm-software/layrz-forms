@@ -352,3 +352,335 @@ func TestNestedSubformCleanMethods(t *testing.T) {
 		}
 	}
 }
+
+// codesOf extracts the error codes from a slice of FieldErrors for assertion purposes.
+func codesOf(errs []*FieldError) []string {
+	codes := make([]string, len(errs))
+	for i, e := range errs {
+		if e != nil {
+			codes[i] = e.Code
+		}
+	}
+	return codes
+}
+
+// TestSubformListCleanMethods tests that nested subform_list elements run their clean methods.
+// This is the main regression test for the bug fix.
+type InnerWithClean struct {
+	Label *string `layrz:"char,required,min_length=2"`
+	Extra *string
+}
+
+func (i *InnerWithClean) CleanExtra(value *string) *FieldError {
+	return &FieldError{Code: "innerConvA"}
+}
+
+func (i *InnerWithClean) CleanCross() Errors {
+	return Errors{"innerConvB": {{Code: "fired"}}}
+}
+
+type OuterWithList struct {
+	One  *InnerWithClean   `layrz:"subform"`
+	Many []*InnerWithClean `layrz:"subform_list"`
+}
+
+func TestSubformListCleanMethods(t *testing.T) {
+	// This test reproduces the exact bug: subform_list elements never run clean methods
+	errs := Validate(&OuterWithList{
+		One:  &InnerWithClean{Label: Ptr("ok")},
+		Many: []*InnerWithClean{{Label: Ptr("ok")}},
+	})
+
+	// Should have one.extra and one.innerConvB from the subform
+	if _, ok := errs["one.extra"]; !ok {
+		t.Error("missing one.extra from subform")
+	}
+	if _, ok := errs["one.innerConvB"]; !ok {
+		t.Error("missing one.innerConvB from subform")
+	}
+
+	// Should ALSO have many.0.extra and many.0.innerConvB from the subform_list element
+	if _, ok := errs["many.0.extra"]; !ok {
+		t.Error("missing many.0.extra from subform_list element (REGRESSION: clean methods not running)")
+	}
+	if _, ok := errs["many.0.innerConvB"]; !ok {
+		t.Error("missing many.0.innerConvB from subform_list element (REGRESSION: clean methods not running)")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListMultipleElementsWithClean tests multiple elements each running clean methods.
+type ItemWithClean struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (i *ItemWithClean) CleanValidation() Errors {
+	if i.Name != nil && *i.Name == "invalid" {
+		return Errors{"name": {{Code: "badName"}}}
+	}
+	return nil
+}
+
+type ListFormMulti struct {
+	Items []*ItemWithClean `layrz:"subform_list"`
+}
+
+func TestSubformListMultipleElementsWithClean(t *testing.T) {
+	errs := Validate(&ListFormMulti{
+		Items: []*ItemWithClean{
+			{Name: Ptr("valid0")},
+			{Name: Ptr("invalid")}, // Should trigger clean error
+			{Name: Ptr("valid2")},
+			{Name: Ptr("invalid")}, // Should trigger clean error
+		},
+	})
+
+	// Should have errors for indices 1 and 3
+	if _, ok := errs["items.1.name"]; !ok {
+		t.Error("missing items.1.name")
+	}
+	if _, ok := errs["items.3.name"]; !ok {
+		t.Error("missing items.3.name")
+	}
+
+	// Should NOT have errors for indices 0 and 2
+	if _, ok := errs["items.0.name"]; ok {
+		t.Error("unexpected items.0.name error")
+	}
+	if _, ok := errs["items.2.name"]; ok {
+		t.Error("unexpected items.2.name error")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListNonPointerElementsWithClean tests non-pointer slice elements running clean methods.
+type NonPointerItem struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (n *NonPointerItem) CleanCheck() Errors {
+	if n.Name != nil && *n.Name == "skip" {
+		return Errors{"name": {{Code: "skipError"}}}
+	}
+	return nil
+}
+
+type ListFormNonPointer struct {
+	Items []NonPointerItem `layrz:"subform_list"` // Non-pointer elements
+}
+
+func TestSubformListNonPointerElementsWithClean(t *testing.T) {
+	errs := Validate(&ListFormNonPointer{
+		Items: []NonPointerItem{
+			{Name: Ptr("ok")},
+			{Name: Ptr("skip")},
+		},
+	})
+
+	// Should have items.1.name error from clean method
+	if _, ok := errs["items.1.name"]; !ok {
+		t.Error("missing items.1.name error from non-pointer element clean method")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListNilPointerElementsSkipped tests that nil elements are skipped entirely.
+type ItemToSkip struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (i *ItemToSkip) CleanValidation() Errors {
+	if i.Name != nil && *i.Name == "bad" {
+		return Errors{"name": {{Code: "badValue"}}}
+	}
+	return nil
+}
+
+type ListFormWithNil struct {
+	Items []*ItemToSkip `layrz:"subform_list"`
+}
+
+func TestSubformListNilPointerElementsSkipped(t *testing.T) {
+	errs := Validate(&ListFormWithNil{
+		Items: []*ItemToSkip{
+			{Name: Ptr("ok")},
+			nil, // Should be skipped - no clean method, no tag rules
+			{Name: Ptr("ok2")},
+		},
+	})
+
+	// Index 1 is nil, so no items.1.* keys at all
+	for key := range errs {
+		if len(key) >= 8 && key[:8] == "items.1." {
+			t.Errorf("nil element at index 1 should not produce errors, got key=%q", key)
+		}
+	}
+
+	// Indices 0 and 2 should not have any errors (names are valid and don't match "bad")
+	if _, ok := errs["items.0.name"]; ok {
+		t.Error("unexpected items.0.name error")
+	}
+	if _, ok := errs["items.2.name"]; ok {
+		t.Error("unexpected items.2.name error")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListThreeLevelNesting tests deeply nested subform + subform_list + subform_list combinations.
+type Level3Item struct {
+	Value *string `layrz:"char,required"`
+}
+
+func (l *Level3Item) CleanValidation() Errors {
+	if l.Value != nil && *l.Value == "bad" {
+		return Errors{"value": {{Code: "bad_value"}}}
+	}
+	return nil
+}
+
+type Level2Container struct {
+	Items []*Level3Item `layrz:"subform_list"`
+}
+
+func (l *Level2Container) CleanValidation() Errors {
+	return Errors{"container": {{Code: "container_error"}}}
+}
+
+type Level1Container struct {
+	L2 *Level2Container `layrz:"subform"`
+}
+
+type Level0Form struct {
+	L1 *Level1Container `layrz:"subform"`
+}
+
+func TestSubformListThreeLevelNesting(t *testing.T) {
+	errs := Validate(&Level0Form{
+		L1: &Level1Container{
+			L2: &Level2Container{
+				Items: []*Level3Item{
+					{Value: Ptr("ok")},
+					{Value: Ptr("bad")},
+				},
+			},
+		},
+	})
+
+	// Should have deeply prefixed keys
+	if _, ok := errs["l1.l2.container"]; !ok {
+		t.Error("missing l1.l2.container from Level2 clean method")
+	}
+	if _, ok := errs["l1.l2.items.1.value"]; !ok {
+		t.Error("missing l1.l2.items.1.value from Level3 clean method")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListCleanReceivesCorrectValue tests that Convention A receives the actual field value.
+type EchoForm struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (e *EchoForm) CleanName(value *string) *FieldError {
+	// If name is "pass", no error; otherwise, error
+	if value != nil && *value == "pass" {
+		return nil
+	}
+	return &FieldError{Code: "failed_validation"}
+}
+
+type EchoListForm struct {
+	Items []*EchoForm `layrz:"subform_list"`
+}
+
+func TestSubformListCleanReceivesCorrectValue(t *testing.T) {
+	errs := Validate(&EchoListForm{
+		Items: []*EchoForm{
+			{Name: Ptr("pass")}, // Should pass
+			{Name: Ptr("fail")}, // Should fail
+			{Name: Ptr("pass")}, // Should pass
+		},
+	})
+
+	// Only index 1 should have error
+	if _, ok := errs["items.1.name"]; !ok {
+		t.Error("missing items.1.name error")
+	}
+	if _, ok := errs["items.0.name"]; ok {
+		t.Error("unexpected items.0.name error")
+	}
+	if _, ok := errs["items.2.name"]; ok {
+		t.Error("unexpected items.2.name error")
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListCleanPanicRecovery tests that a panic in a clean method is recovered and other elements continue.
+type PanicItem struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (p *PanicItem) CleanPanic() Errors {
+	panic("intentional panic in list element")
+}
+
+type PanicListForm struct {
+	Items []*PanicItem `layrz:"subform_list"`
+}
+
+func TestSubformListCleanPanicRecovery(t *testing.T) {
+	// Should not panic; should recover into _config errors
+	errs := Validate(&PanicListForm{
+		Items: []*PanicItem{
+			{Name: Ptr("item0")},
+			{Name: Ptr("item1")},
+		},
+	})
+
+	// Should have _config errors for the panic
+	configErrs, ok := errs[configErrorKey]
+	if !ok {
+		t.Error("missing _config error for panic recovery")
+	} else if len(configErrs) == 0 {
+		t.Error("expected _config error from panic, got 0")
+	} else {
+		t.Logf("panic recovered: %v", configErrs[0].Code)
+	}
+
+	t.Logf("All keys: %v", errs.Keys())
+}
+
+// TestSubformListNoConfigErrorsInHappyPath tests that no spurious _config errors appear in valid cases.
+type SimpleListItem struct {
+	Name *string `layrz:"char,required"`
+}
+
+func (s *SimpleListItem) CleanValidation() Errors {
+	return nil
+}
+
+type SimpleListForm struct {
+	Items []*SimpleListItem `layrz:"subform_list"`
+}
+
+func TestSubformListNoConfigErrorsInHappyPath(t *testing.T) {
+	errs := Validate(&SimpleListForm{
+		Items: []*SimpleListItem{
+			{Name: Ptr("item0")},
+			{Name: Ptr("item1")},
+		},
+	})
+
+	// Should have NO _config errors in the happy path
+	if _, ok := errs[configErrorKey]; ok {
+		t.Error("unexpected _config error in happy path")
+	}
+
+	t.Logf("All keys (should be empty): %v", errs.Keys())
+}
