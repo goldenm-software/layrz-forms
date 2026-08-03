@@ -19,6 +19,7 @@ format:
 .PHONY: lint
 lint:
 	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
+	golangci-lint config verify
 	golangci-lint run ./...
 
 .PHONY: typecheck
@@ -54,6 +55,7 @@ checks:
 	@echo "Running pre-commit checks..."
 	go fmt ./...
 	go vet ./...
+	golangci-lint config verify
 	golangci-lint run ./...
 	@echo "Checking if go.mod is tidy..."
 	@cp go.mod go.mod.tmp

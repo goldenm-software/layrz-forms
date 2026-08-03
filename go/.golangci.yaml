@@ -26,8 +26,6 @@ linters:
       rules:
         - name: comment-spacings
         - name: import-shadowing
-issues:
-  exclude-generated: lax
 formatters:
   enable:
     - gofmt
