@@ -53,9 +53,42 @@ if __name__ == '__main__':
 
   print('form.is_valid():', form.is_valid())
   #> form.is_valid(): False
-  print('form.errors():', form.errors())
-  #> form.errors(): {'rangeTextTest': [{'code': 'minLength', 'expected': 5, 'received': 4}], 'clean1': [{'code': 'error1'}, {'code': 'error2'}], 'clean2': [{'code': 'error1'}]}
+  print('form.errors:', form.errors)
+  #> form.errors: {'rangeTextTest': [LayrzError(code='minLength', expected=5, received=4, extra=None)], 'clean1': [LayrzError(code='error1', expected=None, received=None, extra=None), LayrzError(code='error2', expected=None, received=None, extra=None)], 'clean2': [LayrzError(code='error1', expected=None, received=None, extra=None)]}
+
+  # Convert to plain dicts for JSON serialization:
+  errors_as_dicts = {k: [e.model_dump() for e in v] for k, v in form.errors.items()}
+  print('errors_as_dicts:', errors_as_dicts)
+  #> errors_as_dicts: {'rangeTextTest': [{'code': 'minLength', 'expected': 5, 'received': 4}], 'clean1': [{'code': 'error1'}, {'code': 'error2'}], 'clean2': [{'code': 'error1'}]}
 ```
+
+## Errors
+
+Form errors are represented as `LayrzError` Pydantic models with four fields:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `code` | `str` | Error code (e.g. `'required'`, `'minLength'`, `'invalidChoice'`) |
+| `expected` | `Any` | The constraint that was violated (e.g. `5`, `['a','b']`, a regex); `None` if not applicable |
+| `received` | `Any` | The offending value; `None` if not applicable |
+| `extra` | `dict\|None` | Additional context keys from custom validators; `None` if empty |
+
+Access errors via the `form.errors` property (note: not a method). The property **lazily validates** on first access — if `is_valid()` hasn't been called, reading `.errors` runs synchronous validation automatically.
+
+Serialize errors to plain dicts using `.model_dump()`, which excludes unset fields by default:
+
+```python
+{k: [e.model_dump() for e in v] for k, v in form.errors.items()}
+```
+
+When adding custom errors via `self.add_errors(key, code, extra_args={...})`, keys `expected` and `received` are lifted into their own fields; all other keys nest under `extra`:
+
+```python
+self.add_errors('password', 'weak_password', extra_args={'min_length': 8})
+# Produces: LayrzError(code='weak_password', extra={'min_length': 8})
+```
+
+**Async clean functions caveat:** If your form has `async def clean_*` methods, you must await `form.ais_valid()` before reading `form.errors`. Reading `.errors` without awaiting `ais_valid()` raises `RuntimeError`.
 
 ## FAQ
 

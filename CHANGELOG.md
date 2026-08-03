@@ -4,6 +4,16 @@
 
 ### Breaking changes
 
+- **`Form.errors` is now a property, not a method**: Access as `form.errors` instead of `form.errors()`. The property lazily validates on first access — if `is_valid()` hasn't been called, reading `.errors` runs synchronous validation automatically. Reassigning `form.obj` or calling `calculate_members()` invalidates cached errors.
+
+- **Error entries are now `LayrzError` Pydantic models, not plain dicts**: `form.errors` returns `dict[str, list[LayrzError]]`. Each `LayrzError` has four fields: `code` (str, always set), `expected` (Any), `received` (Any), and `extra` (dict|None for custom keys). `model_dump()` defaults to `exclude_none=True`; use `exclude_none=False` to include unset fields. The model is `extra='forbid'` — unknown constructor kwargs raise.
+
+- **`add_errors()` extra_args routing**: The `key`, `code` signature remains unchanged, but `extra_args` dict keys `expected` and `received` are now lifted into their own fields; all other keys nest under `extra`. Example: `self.add_errors('password', 'weak', extra_args={'min_length': 8})` produces `LayrzError(code='weak', extra={'min_length': 8})`.
+
+- **`is_valid_async()` renamed to `ais_valid()`**: Use the `a`-prefix async convention (e.g. `await form.ais_valid()` instead of `await form.is_valid_async()`). The old name is removed entirely; no alias exists.
+
+- **Async clean functions + lazy property caveat**: Forms with `async def clean_*` methods raise `RuntimeError` if `.errors` is read without awaiting `ais_valid()` first. Always use: `await form.ais_valid()` then `form.errors`.
+
 - **`CharField` now validates type**: Previously accepted non-string types (lists, dicts, numbers) and silently length-checked them. Now emits `{'code': 'invalid'}` for any present non-string value (except `Enum`/`StrEnum` members, which still convert to strings). Impacts forms accepting arbitrary input without type validation.
 
 - **`IdField` validation robustness**: Now emits `{'code': 'invalid'}` instead of raising `ValueError` for non-numeric strings like `'abc'`, and instead of raising `TypeError` when comparing non-comparable types on optional fields.
@@ -16,9 +26,16 @@
 
 ### Added
 
+- **`LayrzError` Pydantic model** (module: `layrz_forms/errors.py`): The new error representation with four fields (`code`, `expected`, `received`, `extra`). Exported from `layrz_forms.__init__`.
+
+- **Error type aliases** (module: `layrz_forms/types.py`):
+  - `ErrorType`: A single `LayrzError`.
+  - `ErrorsType`: The full mapping, `dict[str, list[LayrzError]]`.
+  Both exported from `layrz_forms.__init__`.
+
 - **New internal modules** for cleaner architecture:
   - `casing.py`: centralized `to_camel_case(key)` function (replaces duplicated `_convert_to_camel()` methods; originals retained for backwards compatibility).
-  - `introspection.py`: member discovery via `discover_members()` returning a `MemberDiscovery` dataclass; `Form.calculate_members()` remains the public API.
+  - `introspection.py`: member discovery via `discover_members()` returning a `MemberDiscovery` dataclass; uses `inspect.getmembers_static()` to avoid side effects when introspecting the new `errors` property. `Form.calculate_members()` remains the public API.
   - `validators.py`: module-level `_validate_field`, `_validate_sub_form`, `_validate_sub_form_as_list` functions extracted from `Form` for clarity.
 
 - **Test suite**: 258 tests achieving 98% coverage (pytest + pytest-asyncio + pytest-cov).

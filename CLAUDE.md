@@ -34,26 +34,30 @@ Deployment to PyPI is tag-triggered via `.github/workflows/deploy.yaml` — push
 
 ### Core abstractions
 
-**`Form` (python/layrz_forms/form.py)** — The main orchestrator. Accepts an `obj` (dict, Strawberry type, or None) at init. On `is_valid()` / `is_valid_async()`, it:
+**`Form` (python/layrz_forms/form.py)** — The main orchestrator. Accepts an `obj` (dict, Strawberry type, or None) at init. On `is_valid()` or `ais_valid()`, it:
 1. Discovers `Field` members, nested `Form` instances, nested lists (`_attrs`), and methods prefixed with `clean` via introspection (delegated to `introspection.discover_members()`).
 2. Runs each field's `validate()` method.
 3. Recursively validates sub-forms and nested field/form lists.
-4. Calls all `clean*` methods (async if using `is_valid_async()`).
-5. Exposes `errors()` (camelCase keys) and `cleaned_data` (the validated object).
+4. Calls all `clean*` methods (async if using `ais_valid()`).
+5. Exposes `errors` property (a `dict[str, list[LayrzError]]` with camelCase keys, lazily validated) and `cleaned_data` (the validated object).
 
 **`Field` subclasses (python/layrz_forms/fields/)** — Each field handles one data type. The base class (`base.py`) provides `_append_error()` method; camelCase conversion is now delegated to `casing.to_camel_case()`. Available fields: `BooleanField`, `CharField`, `EmailField`, `IdField`, `JsonField`, `NumberField`, `UuidField`.
 
+**`errors` (python/layrz_forms/errors.py)** — Defines `LayrzError`, a Pydantic model representing a single validation error with fields `code` (str), `expected` (Any), `received` (Any), and `extra` (dict|None). Exported from `layrz_forms.__init__`.
+
 **`casing` (python/layrz_forms/casing.py)** — Centralized `to_camel_case(key: str) -> str` function for snake_case → camelCase conversion. Both `Form` and `Field` delegate to it; legacy `_convert_to_camel()` methods remain for backwards compatibility.
 
-**`introspection` (python/layrz_forms/introspection.py)** — Member discovery via `discover_members(form)` returning a frozen `MemberDiscovery` dataclass containing field, nested form, and clean method lists. `Form.calculate_members()` is the public entry point.
+**`introspection` (python/layrz_forms/introspection.py)** — Member discovery via `discover_members(form)` returning a frozen `MemberDiscovery` dataclass containing field, nested form, and clean method lists. Uses `inspect.getmembers_static()` to avoid invoking the `errors` property as a side effect. `Form.calculate_members()` is the public entry point.
 
 **`validators` (python/layrz_forms/validators.py)** — Module-level validation functions `_validate_field`, `_validate_sub_form`, `_validate_sub_form_as_list` extracted for clarity; `Form` retains thin delegating wrappers for backwards compatibility.
+
+**`types` (python/layrz_forms/types.py)** — Type aliases: `ErrorType = LayrzError` (a single error) and `ErrorsType = dict[str, list[LayrzError]]` (the full error mapping). Both exported from `layrz_forms.__init__`.
 
 ### Key conventions
 
 - **snake_case → camelCase**: All field names and error keys are auto-converted (e.g., `id_test` → `idTest`) in error output.
-- **Error structure**: `{'fieldName': [{'code': 'errorCode', 'expected': ..., 'received': ...}]}`
-- **Clean functions**: Any method starting with `clean` is auto-discovered and called after field validation. Use `self.add_errors(key, code, extra_args)` inside them to add custom errors. Async clean functions are supported only via `is_valid_async()`.
+- **Error structure**: `{'fieldName': [LayrzError(code='errorCode', expected=..., received=..., extra=None)]}`. Each error is a Pydantic model with `code` (always set), `expected`, `received`, and `extra` fields. Use `model_dump()` to convert to plain dicts, which excludes unset fields by default.
+- **Clean functions**: Any method starting with `clean` is auto-discovered and called after field validation. Use `self.add_errors(key, code, extra_args)` inside them to add custom errors; `expected` and `received` are lifted into their own fields, other keys nest under `extra`. Async clean functions are supported only via `ais_valid()`; reading `.errors` without awaiting `ais_valid()` raises `RuntimeError` if async clean methods are present.
 - **Nested forms**: Assign a `Form` instance as a class attribute; it's auto-detected and validated recursively. Lists of fields/forms are declared via `_attrs`.
 - **Strawberry support**: Pass a Strawberry input object directly to `Form(obj=...)`; it's converted internally via `strawberry_to_dict()`.
 
