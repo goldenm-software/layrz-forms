@@ -52,7 +52,7 @@ if __name__ == '__main__':
   form = ExampleForm(obj)
 
   print('form.is_valid():', form.is_valid())
-  #> form.is_valid(): None
+  #> form.is_valid(): False
   print('form.errors():', form.errors())
   #> form.errors(): {'rangeTextTest': [{'code': 'minLength', 'expected': 5, 'received': 4}], 'clean1': [{'code': 'error1'}, {'code': 'error2'}], 'clean2': [{'code': 'error1'}]}
 ```
