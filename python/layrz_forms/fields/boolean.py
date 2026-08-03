@@ -2,7 +2,8 @@
 
 from typing import Any, Self
 
-from layrz_forms.types import ErrorType
+from layrz_forms.errors import LayrzError
+from layrz_forms.types import ErrorsType
 
 from .base import Field
 
@@ -19,7 +20,7 @@ class BooleanField(Field):
     """
     super().__init__(required=required)
 
-  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorsType) -> None:
     """
     Validate the field with the following rules:
     - Should be a bool
@@ -28,8 +29,8 @@ class BooleanField(Field):
     :type key: str
     :param value: Value of the field
     :type value: Any
-    :param errors: Errors dict
-    :type errors: ErrorType
+    :param errors: Errors mapping
+    :type errors: ErrorsType
     """
 
     super().validate(key=key, value=value, errors=errors)
@@ -38,5 +39,5 @@ class BooleanField(Field):
       self._append_error(
         key=key,
         errors=errors,
-        to_add={'code': 'invalid'},
+        to_add=LayrzError(code='invalid'),
       )

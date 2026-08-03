@@ -25,9 +25,9 @@ def discover_members(form_instance: 'Form') -> MemberDiscovery:
   """
   Discover Form members via introspection.
 
-  Uses inspect.getmembers to discover Field instances, nested Form instances,
+  Uses inspect.getmembers_static to discover Field instances, nested Form instances,
   nested lists, and clean methods. Discovery order is alphabetical (as returned
-  by inspect.getmembers), with filtering rules applied in order:
+  by inspect.getmembers_static), with filtering rules applied in order:
     1. Skip reserved words
     2. Skip names starting with '_'
     3. Collect clean* methods
@@ -51,7 +51,9 @@ def discover_members(form_instance: 'Form') -> MemberDiscovery:
   # Import Form here to avoid circular dependency at module load time
   from .form import Form
 
-  for item in inspect.getmembers(form_instance):
+  # Use getmembers_static to avoid invoking descriptors (e.g., the errors property),
+  # which would trigger validation during discovery and incorrectly set _validated = True.
+  for item in inspect.getmembers_static(form_instance):
     if item[0] in reserved:
       continue
     if item[0].startswith('_'):

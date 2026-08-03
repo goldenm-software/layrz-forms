@@ -85,11 +85,9 @@ def validate_sub_form(form: 'Form', *, field: str, sub_form: 'Form | Field', dat
 
   sub_form.calculate_members()
   if not sub_form.is_valid():
-    for key, errors in sub_form.errors().items():
+    for key, errors in sub_form.errors.items():
       for error in errors:
-        code = error['code']
-        del error['code']
-        form.add_errors(key=f'{field}.{key}', code=code, extra_args=error)
+        form._errors.setdefault(form._convert_to_camel(key=f'{field}.{key}'), []).append(error)
 
 
 def validate_sub_form_as_list(form: 'Form', *, field: str, sub_form: 'Form | Field') -> None:

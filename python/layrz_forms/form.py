@@ -6,9 +6,10 @@ from typing import Any, Self, cast
 from strawberry.types import get_object_definition, has_object_definition
 
 from .casing import to_camel_case
+from .errors import LayrzError
 from .fields import Field
 from .introspection import discover_members
-from .types import ErrorType
+from .types import ErrorsType
 from .validators import validate_field, validate_sub_form, validate_sub_form_as_list
 
 
@@ -20,7 +21,8 @@ class Form:
   """
 
   _obj: dict[str, Any]
-  _errors: ErrorType
+  _errors: ErrorsType
+  _validated: bool
   _clean_functions: list[str]
   _attributes: dict[str, Any]
   _nested_attrs: dict[str, list[Self | Field]]
@@ -50,6 +52,7 @@ class Form:
     """
     self._obj = {}
     self._errors = {}
+    self._validated = False
     self._clean_functions = []
     self._attributes = {}
     self._nested_attrs = {}
@@ -76,6 +79,7 @@ class Form:
   def calculate_members(self: Self) -> None:
     """Calculate members"""
     self._errors = {}
+    self._validated = False
     discovery = discover_members(self)
     self._clean_functions = discovery.clean_functions
     self._attributes = discovery.fields
@@ -99,6 +103,8 @@ class Form:
     :param obj: Object to validate
     """
     self._obj = obj
+    self._validated = False
+    self._errors = {}
 
   def _run_field_validations(self: Self) -> None:
     """Run field, sub-form, and nested validations (shared by sync/async)."""
@@ -119,13 +125,13 @@ class Form:
       if isinstance(nform[0], Field):
         self._validate_sub_form(
           field=nattr,
-          form=nform[0],  # type: ignore[arg-type]
+          form=nform[0],
           data=self._obj.get(nattr, {}),
         )
       else:
         self._validate_sub_form_as_list(field=nattr, form=nform[0])
 
-  async def is_valid_async(self: Self) -> bool:
+  async def ais_valid(self: Self) -> bool:
     """
     Returns if the form is valid asynchronously
 
@@ -138,6 +144,7 @@ class Form:
     for func in self._clean_functions:
       await self._clean_async(clean_func=func)
 
+    self._validated = True
     return len(self._errors) == 0
 
   def is_valid(self: Self) -> bool:
@@ -153,10 +160,21 @@ class Form:
     for func in self._clean_functions:
       self._clean_sync(clean_func=func)
 
+    self._validated = True
     return len(self._errors) == 0
 
-  def errors(self: Self) -> ErrorType:
-    """Returns the list of errors"""
+  @property
+  def errors(self: Self) -> ErrorsType:
+    """
+    The validation errors, keyed by camelCase field name.
+
+    Runs synchronous validation on first access if it has not run yet.
+
+    :return: Mapping of camelCase field name to its list of errors
+    :rtype: ErrorsType
+    """
+    if not self._validated:
+      self.is_valid()
     return self._errors
 
   def add_errors(
@@ -173,21 +191,18 @@ class Form:
     :param code: Error code
     :param extra_args: Extra arguments to add to the error
     """
-    if extra_args is None:
-      extra_args = {}
-
     if key == '' or code == '':
       raise RuntimeError('key and code are required')
     camel_key = self._convert_to_camel(key=key)
 
-    if camel_key not in self._errors:
-      self._errors[camel_key] = []
-
-    new_error = {'code': code}
-    if extra_args and isinstance(extra_args, dict):
-      new_error.update(cast(dict[str, Any], extra_args))
-
-    self._errors[camel_key].append(new_error)
+    args: dict[str, Any] = dict(cast(dict[str, Any], extra_args)) if isinstance(extra_args, dict) else {}
+    error = LayrzError(
+      code=code,
+      expected=args.pop('expected', None),
+      received=args.pop('received', None),
+      extra=args or None,
+    )
+    self._errors.setdefault(camel_key, []).append(error)
 
   def _validate_field(self: Self, *, field: tuple[str, Field], new_key: str | None = None) -> None:
     """
@@ -205,7 +220,7 @@ class Form:
       if inspect.iscoroutinefunction(func):
         raise RuntimeError(
           'Cannot call async clean function in sync context',
-          'please use is_valid_async method',
+          'please use ais_valid method',
         )
       # It is sync call it
       func()
@@ -254,7 +269,7 @@ class Form:
       'clean',
       'errors',
       'is_valid',
-      'is_valid_async',
+      'ais_valid',
       'set_obj',
       'calculate_members',
       'cleaned_data',

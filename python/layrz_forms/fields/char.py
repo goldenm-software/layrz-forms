@@ -4,7 +4,8 @@ import re
 from enum import Enum, StrEnum
 from typing import Any, Self
 
-from layrz_forms.types import ErrorType
+from layrz_forms.errors import LayrzError
+from layrz_forms.types import ErrorsType
 
 from .base import Field
 
@@ -42,7 +43,7 @@ class CharField(Field):
     self.choices = choices
     self.regex = regex
 
-  def validate(self: Self, key: str, value: Any, errors: ErrorType) -> None:
+  def validate(self: Self, key: str, value: Any, errors: ErrorsType) -> None:
     """
     Validate the field with the following rules:
     - Value must be a string (or Enum/StrEnum, which are converted to strings)
@@ -56,8 +57,8 @@ class CharField(Field):
     :type key: str
     :param value: Value of the field
     :type value: Any
-    :param errors: Errors dict
-    :type errors: ErrorType
+    :param errors: Errors mapping
+    :type errors: ErrorsType
     """
 
     super().validate(key=key, value=value, errors=errors)
@@ -72,7 +73,7 @@ class CharField(Field):
         self._append_error(
           key=key,
           errors=errors,
-          to_add={'code': 'invalid'},
+          to_add=LayrzError(code='invalid'),
         )
         return
 
@@ -81,7 +82,7 @@ class CharField(Field):
           self._append_error(
             key=key,
             errors=errors,
-            to_add={'code': 'empty'},
+            to_add=LayrzError(code='empty'),
           )
 
       if self.max_length is not None:
@@ -89,11 +90,11 @@ class CharField(Field):
           self._append_error(
             key=key,
             errors=errors,
-            to_add={
-              'code': 'maxLength',
-              'expected': self.max_length,
-              'received': len(value),
-            },
+            to_add=LayrzError(
+              code='maxLength',
+              expected=self.max_length,
+              received=len(value),
+            ),
           )
 
       if self.min_length is not None:
@@ -101,11 +102,11 @@ class CharField(Field):
           self._append_error(
             key=key,
             errors=errors,
-            to_add={
-              'code': 'minLength',
-              'expected': self.min_length,
-              'received': len(value),
-            },
+            to_add=LayrzError(
+              code='minLength',
+              expected=self.min_length,
+              received=len(value),
+            ),
           )
 
       if self.choices is not None:
@@ -114,11 +115,11 @@ class CharField(Field):
           self._append_error(
             key=key,
             errors=errors,
-            to_add={
-              'code': 'invalidChoice',
-              'expected': mapped_choices,
-              'received': value,
-            },
+            to_add=LayrzError(
+              code='invalidChoice',
+              expected=mapped_choices,
+              received=value,
+            ),
           )
 
       if self.regex is not None:
@@ -126,9 +127,9 @@ class CharField(Field):
           self._append_error(
             key=key,
             errors=errors,
-            to_add={
-              'code': 'invalidFormat',
-              'expected': self.regex,
-              'received': value,
-            },
+            to_add=LayrzError(
+              code='invalidFormat',
+              expected=self.regex,
+              received=value,
+            ),
           )

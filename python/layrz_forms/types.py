@@ -1,5 +1,8 @@
 """Layrz Forms Types"""
 
-from typing import Any, TypeAlias
+from typing import TypeAlias
 
-ErrorType: TypeAlias = dict[str, Any]
+from .errors import LayrzError
+
+ErrorType: TypeAlias = LayrzError
+ErrorsType: TypeAlias = dict[str, list[LayrzError]]
