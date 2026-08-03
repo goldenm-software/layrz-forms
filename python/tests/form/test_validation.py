@@ -142,10 +142,10 @@ class TestFormValidationTwice:
 
 
 class TestFormCleanedDataReference:
-  """Test that cleaned_data is returned by reference."""
+  """Test that cleaned_data is returned as a deep copy."""
 
-  def test_cleaned_data_is_input_dict_reference(self) -> None:
-    """Test cleaned_data is the input dict by reference."""
+  def test_cleaned_data_is_deep_copy_not_reference(self) -> None:
+    """Test cleaned_data is a deep copy, not the input dict."""
     input_dict = {'name': 'John', 'age': 30}
 
     class TestForm(Form):
@@ -156,11 +156,12 @@ class TestFormCleanedDataReference:
 
     form = TestForm(input_dict)
     form.is_valid()
-    assert form.cleaned_data is input_dict
-    assert id(form.cleaned_data) == id(input_dict)
+    assert form.cleaned_data is not input_dict
+    assert id(form.cleaned_data) != id(input_dict)
+    assert form.cleaned_data == input_dict
 
-  def test_cleaned_data_mutation_leaks_to_caller(self) -> None:
-    """Test mutations to cleaned_data leak to caller's dict."""
+  def test_cleaned_data_mutation_isolated_top_level(self) -> None:
+    """Test mutations to cleaned_data at top level do not leak."""
     input_dict = {'name': 'John'}
 
     class TestForm(Form):
@@ -171,13 +172,11 @@ class TestFormCleanedDataReference:
     form = TestForm(input_dict)
     form.is_valid()
 
-    # KNOWN BUG: cleaned_data is returned by reference; mutations leak
     form.cleaned_data['name'] = 'Jane'
-    assert input_dict['name'] == 'Jane'
-    assert input_dict is form.cleaned_data
+    assert input_dict['name'] == 'John'
 
-  def test_cleaned_data_add_key_leaks_to_caller(self) -> None:
-    """Test adding keys to cleaned_data leaks to caller's dict."""
+  def test_cleaned_data_add_key_isolated(self) -> None:
+    """Test adding keys to cleaned_data does not leak."""
     input_dict = {'name': 'John'}
 
     class TestForm(Form):
@@ -189,7 +188,30 @@ class TestFormCleanedDataReference:
     form.is_valid()
 
     form.cleaned_data['extra'] = 'value'
-    assert input_dict['extra'] == 'value'
+    assert 'extra' not in input_dict
+
+  def test_cleaned_data_nested_mutation_isolated(self) -> None:
+    """Test mutations to nested dicts in cleaned_data do not leak."""
+
+    class AddressForm(Form):
+      """Nested form."""
+
+      city = CharField(required=True)
+
+    class PersonForm(Form):
+      """Parent form."""
+
+      address = AddressForm()
+
+    input_dict = {'address': {'city': 'New York'}}
+    form = PersonForm(input_dict)
+    form.is_valid()
+
+    # Mutate the nested city value via cleaned_data
+    form.cleaned_data['address']['city'] = 'Los Angeles'
+
+    # Original input should be unchanged
+    assert input_dict['address']['city'] == 'New York'
 
 
 class TestFormReturnsBoolean:

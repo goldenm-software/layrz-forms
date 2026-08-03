@@ -92,7 +92,7 @@ class TestListDiscovery:
     assert isinstance(form._nested_attrs['items'][0], Form)
 
   def test_plain_list_attribute(self) -> None:
-    """Test plain list attribute (not a form declaration)."""
+    """Test plain list attribute (not a form declaration) is ignored."""
 
     class TestForm(Form):
       """Test form with plain list attribute."""
@@ -100,12 +100,53 @@ class TestListDiscovery:
       config = [1, 2, 3]
 
     form = TestForm({})
-    # KNOWN BUG: any list class attribute is claimed as a nested-form declaration
-    assert 'config' in form._nested_attrs
-    assert form._nested_attrs['config'] == [1, 2, 3]
+    # Plain list of non-Field/non-Form items should not be treated as nested
+    assert 'config' not in form._nested_attrs
+
+  def test_plain_string_list_attribute(self) -> None:
+    """Test plain string list attribute is ignored."""
+
+    class TestForm(Form):
+      """Test form with plain string list attribute."""
+
+      colors = ['red', 'green', 'blue']
+
+    form = TestForm({})
+    assert 'colors' not in form._nested_attrs
+
+  def test_field_list_attribute_discovered(self) -> None:
+    """Test list with Field instance is discovered."""
+
+    class TestForm(Form):
+      """Test form with Field list."""
+
+      tags = [CharField(required=True)]
+
+    form = TestForm({})
+    assert 'tags' in form._nested_attrs
+    assert len(form._nested_attrs['tags']) == 1
+    assert isinstance(form._nested_attrs['tags'][0], CharField)
+
+  def test_form_list_attribute_discovered(self) -> None:
+    """Test list with Form instance is discovered."""
+
+    class NestedForm(Form):
+      """Nested form."""
+
+      pass
+
+    class TestForm(Form):
+      """Test form with Form list."""
+
+      items = [NestedForm()]
+
+    form = TestForm({})
+    assert 'items' in form._nested_attrs
+    assert len(form._nested_attrs['items']) == 1
+    assert isinstance(form._nested_attrs['items'][0], Form)
 
   def test_empty_list_attribute_skipped(self) -> None:
-    """Test empty list attribute is skipped during validation."""
+    """Test empty list attribute is not discovered as nested."""
 
     class TestForm(Form):
       """Test form with empty list."""
@@ -113,7 +154,8 @@ class TestListDiscovery:
       items = []
 
     form = TestForm({})
-    assert 'items' in form._nested_attrs
+    # Empty lists are not treated as nested form/field declarations
+    assert 'items' not in form._nested_attrs
     assert form.is_valid()
     assert dump_errors(form.errors) == {}
 

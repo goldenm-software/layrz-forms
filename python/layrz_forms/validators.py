@@ -87,7 +87,7 @@ def validate_sub_form(form: 'Form', *, field: str, sub_form: 'Form | Field', dat
   if not sub_form.is_valid():
     for key, errors in sub_form.errors.items():
       for error in errors:
-        form._errors.setdefault(form._convert_to_camel(key=f'{field}.{key}'), []).append(error)
+        form._errors.setdefault(form._convert_to_camel(key=f'{field}.{key}'), []).append(error.model_copy())
 
 
 def validate_sub_form_as_list(form: 'Form', *, field: str, sub_form: 'Form | Field') -> None:
@@ -109,10 +109,11 @@ def validate_sub_form_as_list(form: 'Form', *, field: str, sub_form: 'Form | Fie
   if isinstance(list_obj, (list, tuple)):
     for i, obj in enumerate(list_obj):
       if isinstance(sub_form, Field):
-        validate_field(
-          form,
-          field=obj,
-          new_key=f'{field}.{i}',
+        # Validate list item value against the field
+        sub_form.validate(
+          key=f'{field}.{i}',
+          value=obj,
+          errors=form._errors,
         )
       elif isinstance(sub_form, Form):
         validate_sub_form(
@@ -121,3 +122,10 @@ def validate_sub_form_as_list(form: 'Form', *, field: str, sub_form: 'Form | Fie
           sub_form=sub_form,
           data=obj,
         )
+  elif field in form._obj:
+    # Non-list value supplied where a list belongs (field is present but not a list)
+    form.add_errors(
+      key=field,
+      code='invalid',
+      extra_args={'message': 'Invalid data type'},
+    )

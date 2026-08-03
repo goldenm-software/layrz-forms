@@ -216,13 +216,11 @@ class TestNestedListOfFields:
       tags = [CharField(required=True, min_length=2)]
 
     form = ParentForm({'tags': ['a', 'bb', 'cc']})
-    # _validate_sub_form_as_list is called, but when passing list of fields,
-    # it tries to validate with form=field but field is not a Form
-    # Actually, the list contains a CharField which is a Field, not a Form
-    # so _validate_field is called but field parameter expects tuple(str, Field)
-    # and _validate_sub_form_as_list calls it with obj (the string value)
-    # This is an issue in the code logic
-    assert form.is_valid() is True  # Currently passes due to bug
+    # First item 'a' fails min_length=2 validation
+    assert form.is_valid() is False
+    errors = form.errors
+    assert 'tags.0' in errors
+    assert errors['tags.0'][0].code == 'minLength'
 
   def test_nested_list_of_fields_empty_list(self) -> None:
     """Test nested list of fields with empty list."""
@@ -240,8 +238,8 @@ class TestNestedListOfFields:
 class TestNestedNonListValue:
   """Test nested list attribute with non-list value."""
 
-  def test_nested_list_non_list_value_silently_skipped(self) -> None:
-    """Test non-list value for nested list is silently skipped."""
+  def test_nested_list_non_list_value_reports_error(self) -> None:
+    """Test non-list value for nested list reports an error."""
 
     class ParentForm(Form):
       """Parent form."""
@@ -249,16 +247,44 @@ class TestNestedNonListValue:
       tags = [CharField(required=True)]
 
     form = ParentForm({'tags': 'not_a_list'})
-    # KNOWN BUG: a non-list value for a nested list is silently skipped with no error
+    assert form.is_valid() is False
+    errors = form.errors
+    assert 'tags' in errors
+    assert dump_errors(errors)['tags'] == [{'code': 'invalid', 'extra': {'message': 'Invalid data type'}}]
+
+  def test_nested_list_absent_value_silently_skipped(self) -> None:
+    """Test absent value for nested list is silently skipped."""
+
+    class ParentForm(Form):
+      """Parent form."""
+
+      tags = [CharField(required=False)]
+
+    form = ParentForm({})
+    # Absent field should not produce an error
     assert form.is_valid() is True
     assert dump_errors(form.errors) == {}
 
+  def test_nested_list_dict_value_reports_error(self) -> None:
+    """Test dict value for nested list reports an error."""
+
+    class ParentForm(Form):
+      """Parent form."""
+
+      tags = [CharField(required=True)]
+
+    form = ParentForm({'tags': {'not': 'a_list'}})
+    assert form.is_valid() is False
+    errors = form.errors
+    assert 'tags' in errors
+    assert errors['tags'][0].code == 'invalid'
+
 
 class TestNestedFormErrorMutation:
-  """Test that parent mutates child form error dicts."""
+  """Test that parent and child errors are independent."""
 
-  def test_parent_mutates_child_error_dict(self) -> None:
-    """Test parent form processes child error dicts."""
+  def test_parent_child_errors_are_independent_copies(self) -> None:
+    """Test parent and child form errors are independent copies."""
 
     class NestedForm(Form):
       """Nested form."""
@@ -270,11 +296,20 @@ class TestNestedFormErrorMutation:
 
       data = NestedForm()
 
+    # Create parent form and validate
     form = ParentForm({'data': {}})
     assert form.is_valid() is False
-    errors = form.errors
 
-    # The parent adds the error with 'code' extracted and merged with other keys
-    assert 'data.name' in errors
-    assert errors['data.name'][0].code == 'required'
-    assert dump_errors(errors)['data.name'][0] == {'code': 'required'}
+    parent_errors = form.errors
+    assert 'data.name' in parent_errors
+
+    # Get the nested form and its errors
+    nested_form = form._sub_forms_attrs['data']
+    nested_errors = nested_form.errors
+
+    # The errors should be the same code but different objects
+    assert parent_errors['data.name'][0].code == 'required'
+    assert nested_errors['name'][0].code == 'required'
+
+    # Verify they are different objects (the parent error is a copy)
+    assert parent_errors['data.name'][0] is not nested_errors['name'][0]

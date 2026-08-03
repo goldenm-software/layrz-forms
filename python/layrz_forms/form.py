@@ -1,4 +1,5 @@
 import asyncio
+import copy
 import inspect
 from collections.abc import Callable
 from typing import Any, Self, cast
@@ -70,11 +71,15 @@ class Form:
   @property
   def cleaned_data(self: Self) -> dict[str, Any]:
     """
-    Returns the cleaned data
+    Returns a deep copy of the cleaned data.
 
-    :return: Cleaned data
+    Mutations to the returned dict at any nesting depth cannot affect the
+    caller's original object. Note that deep copying can fail if the payload
+    contains non-serializable values; such failures propagate naturally.
+
+    :return: Deep copy of cleaned data
     """
-    return self._obj
+    return copy.deepcopy(self._obj)
 
   def calculate_members(self: Self) -> None:
     """Calculate members"""
@@ -122,14 +127,8 @@ class Form:
       if len(nform) == 0:
         # Skip empty list attributes
         continue
-      if isinstance(nform[0], Field):
-        self._validate_sub_form(
-          field=nattr,
-          form=nform[0],
-          data=self._obj.get(nattr, {}),
-        )
-      else:
-        self._validate_sub_form_as_list(field=nattr, form=nform[0])
+      # Both Field and Form lists go through _validate_sub_form_as_list
+      self._validate_sub_form_as_list(field=nattr, form=nform[0])
 
   async def ais_valid(self: Self) -> bool:
     """

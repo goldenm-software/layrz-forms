@@ -68,7 +68,9 @@ def discover_members(form_instance: 'Form') -> MemberDiscovery:
       continue
 
     if isinstance(item[1], list):
-      nested[item[0]] = item[1]
+      # Only treat as nested form/field list if non-empty and first element is Field or Form
+      if len(item[1]) > 0 and isinstance(item[1][0], (Field, Form)):
+        nested[item[0]] = item[1]
       continue
 
     if isinstance(item[1], Form):
