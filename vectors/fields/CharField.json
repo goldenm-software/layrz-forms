@@ -1,0 +1,142 @@
+[
+  {
+    "name": "char_absent_required_true",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}]
+  },
+  {
+    "name": "char_absent_required_false",
+    "field": "CharField",
+    "kwargs": {"required": false},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "char_valid_string",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": "John",
+    "expected_errors": []
+  },
+  {
+    "name": "char_empty_string_empty_false",
+    "field": "CharField",
+    "kwargs": {"required": true, "empty": false},
+    "value": "",
+    "expected_errors": [{"code": "empty"}]
+  },
+  {
+    "name": "char_empty_string_empty_true",
+    "field": "CharField",
+    "kwargs": {"required": false, "empty": true},
+    "value": "",
+    "expected_errors": []
+  },
+  {
+    "name": "char_min_length_exact",
+    "field": "CharField",
+    "kwargs": {"required": true, "min_length": 5},
+    "value": "hello",
+    "expected_errors": []
+  },
+  {
+    "name": "char_min_length_under",
+    "field": "CharField",
+    "kwargs": {"required": true, "min_length": 5},
+    "value": "hola",
+    "expected_errors": [{"code": "minLength", "expected": 5, "received": 4}]
+  },
+  {
+    "name": "char_min_length_over",
+    "field": "CharField",
+    "kwargs": {"required": true, "min_length": 5},
+    "value": "hello world",
+    "expected_errors": []
+  },
+  {
+    "name": "char_max_length_exact",
+    "field": "CharField",
+    "kwargs": {"required": true, "max_length": 5},
+    "value": "hello",
+    "expected_errors": []
+  },
+  {
+    "name": "char_max_length_under",
+    "field": "CharField",
+    "kwargs": {"required": true, "max_length": 5},
+    "value": "hi",
+    "expected_errors": []
+  },
+  {
+    "name": "char_max_length_over",
+    "field": "CharField",
+    "kwargs": {"required": true, "max_length": 5},
+    "value": "hello world",
+    "expected_errors": [{"code": "maxLength", "expected": 5, "received": 11}]
+  },
+  {
+    "name": "char_choices_valid",
+    "field": "CharField",
+    "kwargs": {"required": true, "choices": [["active", "Active"], ["inactive", "Inactive"]]},
+    "value": "active",
+    "expected_errors": []
+  },
+  {
+    "name": "char_choices_invalid",
+    "field": "CharField",
+    "kwargs": {"required": true, "choices": [["active", "Active"], ["inactive", "Inactive"]]},
+    "value": "pending",
+    "expected_errors": [{"code": "invalidChoice", "expected": ["active", "inactive"], "received": "pending"}]
+  },
+  {
+    "name": "char_regex_match",
+    "field": "CharField",
+    "kwargs": {"required": true, "regex": "^[A-Z]{3}$"},
+    "value": "ABC",
+    "expected_errors": []
+  },
+  {
+    "name": "char_regex_no_match",
+    "field": "CharField",
+    "kwargs": {"required": true, "regex": "^[A-Z]{3}$"},
+    "value": "abc",
+    "expected_errors": [{"code": "invalidFormat", "expected": "^[A-Z]{3}$", "received": "abc"}]
+  },
+  {
+    "name": "char_invalid_type_int",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": 42,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "char_invalid_type_float",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": 1.5,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "char_invalid_type_bool",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": true,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "char_invalid_type_list",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": [1, 2],
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "char_invalid_type_dict",
+    "field": "CharField",
+    "kwargs": {"required": true},
+    "value": {"a": 1},
+    "expected_errors": [{"code": "invalid"}]
+  }
+]

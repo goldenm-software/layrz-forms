@@ -1,0 +1,121 @@
+[
+  {
+    "name": "number_int_absent_required_true",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}]
+  },
+  {
+    "name": "number_int_absent_required_false",
+    "field": "NumberField",
+    "kwargs": {"required": false, "datatype": "int"},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_valid",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": 42,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_zero",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": 0,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_negative",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": -10,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_min_value_exact",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int", "min_value": 5},
+    "value": 5,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_min_value_under",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int", "min_value": 5},
+    "value": 4,
+    "expected_errors": [{"code": "minValue", "expected": 5, "received": 4}]
+  },
+  {
+    "name": "number_int_max_value_exact",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int", "max_value": 10},
+    "value": 10,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_max_value_over",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int", "max_value": 10},
+    "value": 15,
+    "expected_errors": [{"code": "maxValue", "expected": 10, "received": 15}]
+  },
+  {
+    "name": "number_float_valid",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "float"},
+    "value": 3.14,
+    "expected_errors": []
+  },
+  {
+    "name": "number_float_integer",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "float"},
+    "value": 42,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_float_min_value",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "float", "min_value": 1.5},
+    "value": 1.5,
+    "expected_errors": []
+  },
+  {
+    "name": "number_float_max_value",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "float", "max_value": 99.99},
+    "value": 99.99,
+    "expected_errors": []
+  },
+  {
+    "name": "number_int_wrong_type_string",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": "not a number",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_int_rejects_bool_true",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": true,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_int_rejects_bool_false",
+    "field": "NumberField",
+    "kwargs": {"required": true, "datatype": "int"},
+    "value": false,
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "number_float_rejects_bool",
+    "field": "NumberField",
+    "kwargs": {"required": false, "datatype": "float"},
+    "value": true,
+    "expected_errors": [{"code": "invalid"}]
+  }
+]

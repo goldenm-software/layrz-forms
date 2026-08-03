@@ -1,0 +1,93 @@
+[
+  {
+    "name": "json_dict_absent_required_true",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "dict"},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}, {"code": "invalid"}]
+  },
+  {
+    "name": "json_dict_absent_required_false",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "dict"},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "json_dict_populated",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "dict"},
+    "value": {"key": "value"},
+    "expected_errors": []
+  },
+  {
+    "name": "json_dict_empty_empty_true",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "dict", "empty": true},
+    "value": {},
+    "expected_errors": []
+  },
+  {
+    "name": "json_dict_empty_empty_false",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "dict", "empty": false},
+    "value": {},
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "json_dict_wrong_type_list",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "dict"},
+    "value": [],
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "json_dict_wrong_type_string",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "dict"},
+    "value": "not a dict",
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "json_list_absent_required_true",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "list"},
+    "value_absent": true,
+    "expected_errors": [{"code": "required"}, {"code": "invalid"}]
+  },
+  {
+    "name": "json_list_absent_required_false",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "list"},
+    "value_absent": true,
+    "expected_errors": []
+  },
+  {
+    "name": "json_list_populated",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "list"},
+    "value": [1, 2, 3],
+    "expected_errors": []
+  },
+  {
+    "name": "json_list_empty_empty_true",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "list", "empty": true},
+    "value": [],
+    "expected_errors": []
+  },
+  {
+    "name": "json_list_empty_empty_false",
+    "field": "JsonField",
+    "kwargs": {"required": false, "datatype": "list", "empty": false},
+    "value": [],
+    "expected_errors": [{"code": "invalid"}]
+  },
+  {
+    "name": "json_list_wrong_type_dict",
+    "field": "JsonField",
+    "kwargs": {"required": true, "datatype": "list"},
+    "value": {},
+    "expected_errors": [{"code": "invalid"}]
+  }
+]
