@@ -5,8 +5,8 @@ import "testing"
 func TestValidateBool(t *testing.T) {
 	t.Run("absent required true", func(t *testing.T) {
 		errs := ValidateBool(nil, BoolRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s], got %v", codeRequired, errs)
 		}
 	})
 

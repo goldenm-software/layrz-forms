@@ -4,6 +4,14 @@ import (
 	"testing"
 )
 
+// Test constants for common field error codes and datatype values.
+const (
+	testCodeMinLength = "minLength"
+	testCodeMinValue  = "minValue"
+	testDatatypeInt   = "int"
+	testDatatypeFloat = "float"
+)
+
 // TestNilFormInput tests that a nil form produces a config error.
 func TestNilFormInput(t *testing.T) {
 	errs := Validate(nil)
@@ -53,7 +61,7 @@ func TestNilPointerInput(t *testing.T) {
 		Name *string `layrz:"char,required"`
 	}
 
-	var form *TestForm = nil
+	var form *TestForm
 
 	errs := Validate(form)
 
@@ -267,7 +275,7 @@ func TestFieldValidationOrder(t *testing.T) {
 	if !ok {
 		t.Fatal("missing text key")
 	}
-	if len(textErrs) != 1 || textErrs[0].Code != "minLength" {
+	if len(textErrs) != 1 || textErrs[0].Code != testCodeMinLength {
 		t.Errorf("expected minLength error, got %v", textErrs)
 	}
 
@@ -522,13 +530,13 @@ func TestAllScalarFieldKinds(t *testing.T) {
 // TestNilPointerScalarFields tests that nil pointers in scalar fields produce required errors.
 func TestNilPointerScalarFields(t *testing.T) {
 	type NilFieldsForm struct {
-		IdField     *int    `layrz:"id,required"`
+		IDField     *int    `layrz:"id,required"`
 		EmailField  *string `layrz:"email,required"`
-		UuidField   *string `layrz:"uuid,required"`
+		UUIDField   *string `layrz:"uuid,required"`
 		CharField   *string `layrz:"char,required"`
 		NumberField *int    `layrz:"number,required"`
 		BoolField   *bool   `layrz:"bool,required"`
-		JsonField   *[]any  `layrz:"json,required"`
+		JSONField   *[]any  `layrz:"json,required"`
 	}
 
 	form := &NilFieldsForm{
@@ -540,11 +548,11 @@ func TestNilPointerScalarFields(t *testing.T) {
 		t.Fatal("expected errors for nil required fields")
 	}
 
-	expectedKeys := []string{"idField", "emailField", "uuidField", "charField", "numberField", "boolField", "jsonField"}
+	expectedKeys := []string{"iDField", "emailField", "uUIDField", "charField", "numberField", "boolField", "jSONField"}
 	for _, key := range expectedKeys {
 		if fieldErrs, ok := errs[key]; !ok || len(fieldErrs) == 0 {
 			t.Errorf("expected error for %s, got: %v", key, errs.Keys())
-		} else if fieldErrs[0].Code != "required" {
+		} else if fieldErrs[0].Code != codeRequired {
 			t.Errorf("expected required error for %s, got: %s", key, fieldErrs[0].Code)
 		}
 	}
@@ -574,7 +582,7 @@ func TestEmbeddedStructValueType(t *testing.T) {
 	}
 
 	// Test with valid value
-	form.EmbeddedValueAddress.StreetName = Ptr("Main St")
+	form.StreetName = Ptr("Main St")
 	errs = Validate(form)
 	if len(errs) > 0 {
 		t.Errorf("expected no errors for valid street name, got: %v", errs.Keys())
@@ -755,13 +763,13 @@ func TestBoolFieldWithNilPointer(t *testing.T) {
 // TestIDFieldWithBothTypes tests that id field works with both *int and *string types.
 func TestIDFieldWithBothTypes(t *testing.T) {
 	type IDMixedForm struct {
-		IntId    *int    `layrz:"id,required"`
-		StringId *string `layrz:"id,required"`
+		IntID    *int    `layrz:"id,required"`
+		StringID *string `layrz:"id,required"`
 	}
 
 	form := &IDMixedForm{
-		IntId:    Ptr(99),
-		StringId: Ptr("456"), // String ID must be parseable as integer
+		IntID:    Ptr(99),
+		StringID: Ptr("456"), // String ID must be parseable as integer
 	}
 
 	errs := Validate(form)
@@ -770,15 +778,15 @@ func TestIDFieldWithBothTypes(t *testing.T) {
 	}
 
 	// Test with nil values
-	form.IntId = nil
-	form.StringId = nil
+	form.IntID = nil
+	form.StringID = nil
 	errs = Validate(form)
 
-	if _, ok := errs["intId"]; !ok {
-		t.Errorf("expected intId error")
+	if _, ok := errs["intID"]; !ok {
+		t.Errorf("expected intID error")
 	}
-	if _, ok := errs["stringId"]; !ok {
-		t.Errorf("expected stringId error")
+	if _, ok := errs["stringID"]; !ok {
+		t.Errorf("expected stringID error")
 	}
 }
 
@@ -794,7 +802,7 @@ func TestValueFieldChar(t *testing.T) {
 		// Should have "empty" error, NOT "required"
 		if fieldErrs, ok := errs["name"]; !ok {
 			t.Errorf("expected error for name field")
-		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == codeRequired {
 			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
 		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "empty" {
 			t.Errorf("empty string with empty=false should emit empty error, got %v", fieldErrs)
@@ -823,7 +831,7 @@ func TestValueFieldChar(t *testing.T) {
 
 		if fieldErrs, ok := errs["name"]; !ok {
 			t.Errorf("expected error for name field")
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != testCodeMinLength {
 			t.Errorf("expected minLength error, got %v", fieldErrs)
 		}
 	})
@@ -853,7 +861,7 @@ func TestValueFieldEmail(t *testing.T) {
 		// Should have "empty" error, NOT "required"
 		if fieldErrs, ok := errs["email"]; !ok {
 			t.Errorf("expected error for email field")
-		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == codeRequired {
 			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
 		}
 	})
@@ -867,7 +875,7 @@ func TestValueFieldEmail(t *testing.T) {
 
 		if fieldErrs, ok := errs["email"]; !ok {
 			t.Errorf("expected error for email field")
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != codeInvalid {
 			t.Errorf("expected invalid error, got %v", fieldErrs)
 		}
 	})
@@ -897,9 +905,9 @@ func TestValueFieldNumber(t *testing.T) {
 		// Should have "minValue" error, NOT "required"
 		if fieldErrs, ok := errs["count"]; !ok {
 			t.Errorf("expected error for count field")
-		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == "required" {
+		} else if len(fieldErrs) > 0 && fieldErrs[0].Code == codeRequired {
 			t.Errorf("value field should not emit required; got code=%q", fieldErrs[0].Code)
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minValue" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != testCodeMinValue {
 			t.Errorf("expected minValue error, got %v", fieldErrs)
 		}
 	})
@@ -971,7 +979,7 @@ func TestValueFieldJSON(t *testing.T) {
 		// empty=false should emit "invalid"
 		if fieldErrs, ok := errs["tags"]; !ok {
 			t.Errorf("expected error for tags field")
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != codeInvalid {
 			t.Errorf("expected invalid error for nil slice, got %v", fieldErrs)
 		}
 	})
@@ -986,7 +994,7 @@ func TestValueFieldJSON(t *testing.T) {
 		// empty slice with empty=false should emit "invalid"
 		if fieldErrs, ok := errs["tags"]; !ok {
 			t.Errorf("expected error for tags field")
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != codeInvalid {
 			t.Errorf("expected invalid error for empty slice, got %v", fieldErrs)
 		}
 	})
@@ -1014,7 +1022,7 @@ func TestValueFieldJSON(t *testing.T) {
 		// empty=false should emit "invalid"
 		if fieldErrs, ok := errs["metadata"]; !ok {
 			t.Errorf("expected error for metadata field")
-		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "invalid" {
+		} else if len(fieldErrs) == 0 || fieldErrs[0].Code != codeInvalid {
 			t.Errorf("expected invalid error for nil map, got %v", fieldErrs)
 		}
 	})
@@ -1089,7 +1097,7 @@ func TestValueFieldInSubform(t *testing.T) {
 	// Should have error keyed as "addr.street"
 	if fieldErrs, ok := errs["addr.street"]; !ok {
 		t.Errorf("expected error for addr.street, got keys: %v", errs.Keys())
-	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != testCodeMinLength {
 		t.Errorf("expected minLength error in subform, got %v", fieldErrs)
 	}
 }
@@ -1116,7 +1124,7 @@ func TestValueFieldInSubformList(t *testing.T) {
 	// Should have error keyed as "items.1.name"
 	if fieldErrs, ok := errs["items.1.name"]; !ok {
 		t.Errorf("expected error for items.1.name, got keys: %v", errs.Keys())
-	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != "minLength" {
+	} else if len(fieldErrs) == 0 || fieldErrs[0].Code != testCodeMinLength {
 		t.Errorf("expected minLength error in subform_list element, got %v", fieldErrs)
 	}
 }

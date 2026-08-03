@@ -2,11 +2,12 @@ package layrz
 
 import "testing"
 
+//nolint:gocyclo // table-driven test legitimately exceeds complexity 30
 func TestValidateNumber(t *testing.T) {
 	t.Run("int absent required true", func(t *testing.T) {
 		errs := ValidateNumber(nil, NumberRules{Required: true, Datatype: "int"})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s], got %v", codeRequired, errs)
 		}
 	})
 
@@ -81,8 +82,8 @@ func TestValidateNumber(t *testing.T) {
 
 	t.Run("float rejects int", func(t *testing.T) {
 		errs := ValidateNumber(42, NumberRules{Required: true, Datatype: "float"})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
@@ -102,29 +103,29 @@ func TestValidateNumber(t *testing.T) {
 
 	t.Run("int rejects string", func(t *testing.T) {
 		errs := ValidateNumber("not a number", NumberRules{Required: true, Datatype: "int"})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("int rejects bool true", func(t *testing.T) {
 		errs := ValidateNumber(true, NumberRules{Required: true, Datatype: "int"})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid] for bool, got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s] for bool, got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("int rejects bool false", func(t *testing.T) {
 		errs := ValidateNumber(false, NumberRules{Required: true, Datatype: "int"})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid] for bool, got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s] for bool, got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("float rejects bool", func(t *testing.T) {
 		errs := ValidateNumber(true, NumberRules{Required: false, Datatype: "float"})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid] for bool, got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s] for bool, got %v", codeInvalid, errs)
 		}
 	})
 

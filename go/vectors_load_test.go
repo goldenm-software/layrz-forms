@@ -3,7 +3,7 @@ package layrz
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -44,7 +44,7 @@ func loadVectorFiles(t *testing.T) map[string][]vectorCase {
 	result := make(map[string][]vectorCase)
 
 	for _, file := range files {
-		data, err := ioutil.ReadFile(file)
+		data, err := os.ReadFile(file)
 		if err != nil {
 			t.Fatalf("failed to read %q: %v", file, err)
 		}

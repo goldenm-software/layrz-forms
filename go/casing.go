@@ -1,3 +1,4 @@
+// Package layrz provides form validation for Go structs.
 package layrz
 
 import (

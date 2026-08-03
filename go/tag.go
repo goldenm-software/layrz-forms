@@ -11,15 +11,30 @@ import (
 type FieldKind string
 
 const (
-	KindID          FieldKind = "id"
-	KindEmail       FieldKind = "email"
-	KindUUID        FieldKind = "uuid"
-	KindChar        FieldKind = "char"
-	KindNumber      FieldKind = "number"
-	KindBool        FieldKind = "bool"
-	KindJSON        FieldKind = "json"
-	KindSubform     FieldKind = "subform"
+	// KindID validates integer or string identity fields.
+	KindID FieldKind = "id"
+	// KindEmail validates email address fields.
+	KindEmail FieldKind = "email"
+	// KindUUID validates UUID fields.
+	KindUUID FieldKind = "uuid"
+	// KindChar validates character/string fields.
+	KindChar FieldKind = "char"
+	// KindNumber validates numeric fields (int, float).
+	KindNumber FieldKind = "number"
+	// KindBool validates boolean fields.
+	KindBool FieldKind = "bool"
+	// KindJSON validates JSON container fields (list or dict).
+	KindJSON FieldKind = "json"
+	// KindSubform validates nested struct fields.
+	KindSubform FieldKind = "subform"
+	// KindSubformList validates lists of nested structs.
 	KindSubformList FieldKind = "subform_list"
+)
+
+// Tag rule constants used in validation.
+const (
+	ruleRequired = "required"
+	ruleEmpty    = "empty"
 )
 
 // FieldSpec is a parsed `layrz` struct tag.
@@ -34,6 +49,77 @@ type FieldSpec struct {
 	Regex     string
 	Choices   []string
 	Datatype  string // "int"|"float"|"list"|"dict"|""
+}
+
+// parseKeyValueRule parses a key=value rule and applies it to the spec.
+// Returns an error if the rule is invalid or duplicated.
+func parseKeyValueRule(key, value string, spec *FieldSpec, seen map[string]bool) error {
+	switch key {
+	case "min_length":
+		if seen["min_length"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'min_length'")
+		}
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("layrz tag: min_length value must be an integer: %w", err)
+		}
+		spec.MinLength = &v
+		seen["min_length"] = true
+
+	case "max_length":
+		if seen["max_length"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'max_length'")
+		}
+		v, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("layrz tag: max_length value must be an integer: %w", err)
+		}
+		spec.MaxLength = &v
+		seen["max_length"] = true
+
+	case "min_value":
+		if seen["min_value"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'min_value'")
+		}
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("layrz tag: min_value must be a number: %w", err)
+		}
+		spec.MinValue = &v
+		seen["min_value"] = true
+
+	case "max_value":
+		if seen["max_value"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'max_value'")
+		}
+		v, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("layrz tag: max_value must be a number: %w", err)
+		}
+		spec.MaxValue = &v
+		seen["max_value"] = true
+
+	case "choices":
+		if seen["choices"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'choices'")
+		}
+		spec.Choices = strings.Split(value, "|")
+		seen["choices"] = true
+
+	case "datatype":
+		if seen["datatype"] {
+			return fmt.Errorf("layrz tag: duplicate rule 'datatype'")
+		}
+		if value != datatypeInt && value != datatypeFloat && value != datatypeList && value != datatypeDict {
+			return fmt.Errorf("layrz tag: datatype must be one of 'int', 'float', 'list', 'dict', got %q", value)
+		}
+		spec.Datatype = value
+		seen["datatype"] = true
+
+	default:
+		return fmt.Errorf("layrz tag: unknown rule %q", key)
+	}
+	return nil
 }
 
 // ParseTag parses a `layrz` tag value. Returns (nil, nil) for "" or "-" (skip).
@@ -91,21 +177,21 @@ func ParseTag(tag string) (*FieldSpec, error) {
 			continue
 		}
 
-		if token == "required" {
-			if seen["required"] {
-				return nil, fmt.Errorf("layrz tag: duplicate rule 'required'")
+		if token == ruleRequired {
+			if seen[ruleRequired] {
+				return nil, fmt.Errorf("layrz tag: duplicate rule %q", ruleRequired)
 			}
 			spec.Required = true
-			seen["required"] = true
+			seen[ruleRequired] = true
 			continue
 		}
 
-		if token == "empty" {
-			if seen["empty"] {
-				return nil, fmt.Errorf("layrz tag: duplicate rule 'empty'")
+		if token == ruleEmpty {
+			if seen[ruleEmpty] {
+				return nil, fmt.Errorf("layrz tag: duplicate rule %q", ruleEmpty)
 			}
 			spec.Empty = true
-			seen["empty"] = true
+			seen[ruleEmpty] = true
 			continue
 		}
 
@@ -113,71 +199,8 @@ func ParseTag(tag string) (*FieldSpec, error) {
 		if idx := strings.Index(token, "="); idx != -1 {
 			key := token[:idx]
 			value := token[idx+1:]
-
-			switch key {
-			case "min_length":
-				if seen["min_length"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'min_length'")
-				}
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return nil, fmt.Errorf("layrz tag: min_length value must be an integer: %w", err)
-				}
-				spec.MinLength = &v
-				seen["min_length"] = true
-
-			case "max_length":
-				if seen["max_length"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'max_length'")
-				}
-				v, err := strconv.Atoi(value)
-				if err != nil {
-					return nil, fmt.Errorf("layrz tag: max_length value must be an integer: %w", err)
-				}
-				spec.MaxLength = &v
-				seen["max_length"] = true
-
-			case "min_value":
-				if seen["min_value"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'min_value'")
-				}
-				v, err := strconv.ParseFloat(value, 64)
-				if err != nil {
-					return nil, fmt.Errorf("layrz tag: min_value must be a number: %w", err)
-				}
-				spec.MinValue = &v
-				seen["min_value"] = true
-
-			case "max_value":
-				if seen["max_value"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'max_value'")
-				}
-				v, err := strconv.ParseFloat(value, 64)
-				if err != nil {
-					return nil, fmt.Errorf("layrz tag: max_value must be a number: %w", err)
-				}
-				spec.MaxValue = &v
-				seen["max_value"] = true
-
-			case "choices":
-				if seen["choices"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'choices'")
-				}
-				spec.Choices = strings.Split(value, "|")
-				seen["choices"] = true
-
-			case "datatype":
-				if seen["datatype"] {
-					return nil, fmt.Errorf("layrz tag: duplicate rule 'datatype'")
-				}
-				if value != "int" && value != "float" && value != "list" && value != "dict" {
-					return nil, fmt.Errorf("layrz tag: datatype must be one of 'int', 'float', 'list', 'dict', got %q", value)
-				}
-				spec.Datatype = value
-				seen["datatype"] = true
-
-			default:
-				return nil, fmt.Errorf("layrz tag: unknown rule %q", key)
+			if err := parseKeyValueRule(key, value, spec, seen); err != nil {
+				return nil, err
 			}
 			continue
 		}

@@ -5,8 +5,8 @@ import "testing"
 func TestValidateChar(t *testing.T) {
 	t.Run("absent required true", func(t *testing.T) {
 		errs := ValidateChar(nil, CharRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s], got %v", codeRequired, errs)
 		}
 	})
 
@@ -26,8 +26,8 @@ func TestValidateChar(t *testing.T) {
 
 	t.Run("empty string empty false", func(t *testing.T) {
 		errs := ValidateChar(Ptr(""), CharRules{Required: true, Empty: false})
-		if len(errs) != 1 || errs[0].Code != "empty" {
-			t.Errorf("expected [empty], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeEmpty {
+			t.Errorf("expected [%s], got %v", codeEmpty, errs)
 		}
 	})
 
@@ -47,7 +47,7 @@ func TestValidateChar(t *testing.T) {
 
 	t.Run("min_length under", func(t *testing.T) {
 		errs := ValidateChar(Ptr("hola"), CharRules{Required: true, MinLength: Ptr(5)})
-		if len(errs) != 1 || errs[0].Code != "minLength" {
+		if len(errs) != 1 || errs[0].Code != codeMinLength {
 			t.Errorf("expected [minLength], got %v", errs)
 		}
 		if errs[0].Expected != 5 || errs[0].Received != 4 {

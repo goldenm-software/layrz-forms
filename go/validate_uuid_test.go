@@ -5,8 +5,8 @@ import "testing"
 func TestValidateUUID(t *testing.T) {
 	t.Run("absent required true", func(t *testing.T) {
 		errs := ValidateUUID(nil, UUIDRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s], got %v", codeRequired, errs)
 		}
 	})
 
@@ -54,22 +54,22 @@ func TestValidateUUID(t *testing.T) {
 
 	t.Run("invalid format", func(t *testing.T) {
 		errs := ValidateUUID(Ptr("not-a-uuid"), UUIDRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("invalid empty string", func(t *testing.T) {
 		errs := ValidateUUID(Ptr(""), UUIDRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("invalid malformed hyphenated", func(t *testing.T) {
 		errs := ValidateUUID(Ptr("550e8400-e29b-41d4-a716"), UUIDRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 }

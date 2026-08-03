@@ -5,6 +5,9 @@ import (
 	"testing"
 )
 
+// Test value constants
+const testValueBad = "bad"
+
 // TestConventionADiscoveryAndCall tests Convention A clean method discovery and invocation.
 func TestConventionADiscoveryAndCall(t *testing.T) {
 	type TestForm struct {
@@ -32,7 +35,7 @@ type NoErrorForm struct {
 	Name *string `layrz:"char,required"`
 }
 
-func (f *NoErrorForm) CleanName(value *string) *FieldError {
+func (f *NoErrorForm) CleanName(_ *string) *FieldError {
 	// Always returns nil
 	return nil
 }
@@ -127,7 +130,7 @@ type NoDoubleFiringForm struct {
 
 func (f *NoDoubleFiringForm) CleanStatus(value *string) *FieldError {
 	// This is Convention A, not B
-	if value != nil && *value == "invalid" {
+	if value != nil && *value == codeInvalid {
 		return &FieldError{Code: "customError"}
 	}
 	return nil
@@ -155,9 +158,9 @@ type BrokenSignatureForm struct {
 	Name *string `layrz:"char,required"`
 }
 
-func (f *BrokenSignatureForm) CleanBroken(a int, b int) string {
+func (f *BrokenSignatureForm) CleanBroken(_ int, _ int) string {
 	// Wrong signature: wrong arity, wrong return type
-	return "bad"
+	return testValueBad
 }
 
 func TestBrokenMethodSignature(t *testing.T) {
@@ -184,7 +187,7 @@ type TypeMismatchForm struct {
 	Name *string `layrz:"char,required"`
 }
 
-func (f *TypeMismatchForm) CleanName(value int) *FieldError {
+func (f *TypeMismatchForm) CleanName(_ int) *FieldError {
 	// Wrong param type: should be *string, not int
 	return nil
 }
@@ -275,8 +278,6 @@ type SameKeyForm struct {
 	Field *string `layrz:"char,required"`
 }
 
-var sameKeyErrors []string
-
 func (f *SameKeyForm) CleanA() Errors {
 	return Errors{
 		"status": {
@@ -353,17 +354,6 @@ func TestNestedSubformCleanMethods(t *testing.T) {
 	}
 }
 
-// codesOf extracts the error codes from a slice of FieldErrors for assertion purposes.
-func codesOf(errs []*FieldError) []string {
-	codes := make([]string, len(errs))
-	for i, e := range errs {
-		if e != nil {
-			codes[i] = e.Code
-		}
-	}
-	return codes
-}
-
 // TestSubformListCleanMethods tests that nested subform_list elements run their clean methods.
 // This is the main regression test for the bug fix.
 type InnerWithClean struct {
@@ -371,7 +361,7 @@ type InnerWithClean struct {
 	Extra *string
 }
 
-func (i *InnerWithClean) CleanExtra(value *string) *FieldError {
+func (i *InnerWithClean) CleanExtra(_ *string) *FieldError {
 	return &FieldError{Code: "innerConvA"}
 }
 
@@ -416,7 +406,7 @@ type ItemWithClean struct {
 }
 
 func (i *ItemWithClean) CleanValidation() Errors {
-	if i.Name != nil && *i.Name == "invalid" {
+	if i.Name != nil && *i.Name == codeInvalid {
 		return Errors{"name": {{Code: "badName"}}}
 	}
 	return nil
@@ -493,7 +483,7 @@ type ItemToSkip struct {
 }
 
 func (i *ItemToSkip) CleanValidation() Errors {
-	if i.Name != nil && *i.Name == "bad" {
+	if i.Name != nil && *i.Name == testValueBad {
 		return Errors{"name": {{Code: "badValue"}}}
 	}
 	return nil
@@ -519,7 +509,7 @@ func TestSubformListNilPointerElementsSkipped(t *testing.T) {
 		}
 	}
 
-	// Indices 0 and 2 should not have any errors (names are valid and don't match "bad")
+	// Indices 0 and 2 should not have any errors (names are valid and don't match testValueBad)
 	if _, ok := errs["items.0.name"]; ok {
 		t.Error("unexpected items.0.name error")
 	}
@@ -536,7 +526,7 @@ type Level3Item struct {
 }
 
 func (l *Level3Item) CleanValidation() Errors {
-	if l.Value != nil && *l.Value == "bad" {
+	if l.Value != nil && *l.Value == testValueBad {
 		return Errors{"value": {{Code: "bad_value"}}}
 	}
 	return nil
@@ -564,7 +554,7 @@ func TestSubformListThreeLevelNesting(t *testing.T) {
 			L2: &Level2Container{
 				Items: []*Level3Item{
 					{Value: Ptr("ok")},
-					{Value: Ptr("bad")},
+					{Value: Ptr(testValueBad)},
 				},
 			},
 		},

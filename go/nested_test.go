@@ -31,7 +31,7 @@ func TestNestedSubformMinLength(t *testing.T) {
 	if len(addrErrs) != 1 {
 		t.Errorf("expected 1 error, got %d", len(addrErrs))
 	}
-	if addrErrs[0].Code != "minLength" {
+	if addrErrs[0].Code != testCodeMinLength {
 		t.Errorf("expected minLength, got %q", addrErrs[0].Code)
 	}
 	if addrErrs[0].Expected != 5 {
@@ -323,7 +323,7 @@ func TestMultipleErrorsPerField(t *testing.T) {
 	if !ok {
 		t.Fatal("missing address.streetName")
 	}
-	if len(addrErrs) != 1 || addrErrs[0].Code != "minLength" {
+	if len(addrErrs) != 1 || addrErrs[0].Code != testCodeMinLength {
 		t.Errorf("expected 1 minLength error, got %v", addrErrs)
 	}
 }

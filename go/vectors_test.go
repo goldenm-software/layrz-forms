@@ -44,6 +44,7 @@ func TestVectorSuite(t *testing.T) {
 
 // runVectorCase executes a single vector test case by calling the validator directly.
 func runVectorCase(t *testing.T, tc vectorCase) error {
+	t.Helper()
 	// Get the value to validate
 	var fieldValue any
 	if !tc.ValueAbsent {

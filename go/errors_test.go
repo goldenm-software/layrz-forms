@@ -5,21 +5,32 @@ import (
 	"testing"
 )
 
+// Test error code constants
+const (
+	codeRequired  = "required"
+	codeInvalid   = "invalid"
+	codeEmpty     = "empty"
+	codeMinLength = "minLength"
+	codeMinValue  = "minValue"
+	codeError1    = "error1"
+	codeBad       = "bad"
+)
+
 func TestErrorsAdd(t *testing.T) {
 	t.Run("add single error", func(t *testing.T) {
 		e := make(Errors)
-		e.Add("field", &FieldError{Code: "required"})
+		e.Add("field", &FieldError{Code: codeRequired})
 		if len(e["field"]) != 1 {
 			t.Fatalf("expected 1 error, got %d", len(e["field"]))
 		}
-		if e["field"][0].Code != "required" {
-			t.Errorf("expected code 'required', got %q", e["field"][0].Code)
+		if e["field"][0].Code != codeRequired {
+			t.Errorf("expected code %q, got %q", codeRequired, e["field"][0].Code)
 		}
 	})
 
 	t.Run("add multiple errors", func(t *testing.T) {
 		e := make(Errors)
-		e.Add("field", &FieldError{Code: "invalid"}, &FieldError{Code: "minValue"})
+		e.Add("field", &FieldError{Code: codeInvalid}, &FieldError{Code: codeMinValue})
 		if len(e["field"]) != 2 {
 			t.Fatalf("expected 2 errors, got %d", len(e["field"]))
 		}
@@ -27,7 +38,7 @@ func TestErrorsAdd(t *testing.T) {
 
 	t.Run("skip nil entries", func(t *testing.T) {
 		e := make(Errors)
-		e.Add("field", &FieldError{Code: "invalid"}, nil, &FieldError{Code: "minValue"})
+		e.Add("field", &FieldError{Code: codeInvalid}, nil, &FieldError{Code: codeMinValue})
 		if len(e["field"]) != 2 {
 			t.Fatalf("expected 2 errors (nil skipped), got %d", len(e["field"]))
 		}
@@ -44,10 +55,10 @@ func TestErrorsAdd(t *testing.T) {
 
 func TestErrorsMerge(t *testing.T) {
 	e1 := make(Errors)
-	e1["userName"] = []*FieldError{{Code: "required"}}
+	e1["userName"] = []*FieldError{{Code: codeRequired}}
 
 	e2 := make(Errors)
-	e2["user_name"] = []*FieldError{{Code: "invalid"}}
+	e2["user_name"] = []*FieldError{{Code: codeInvalid}}
 
 	e1.Merge(e2)
 
@@ -67,7 +78,7 @@ func TestErrorsIsEmpty(t *testing.T) {
 
 	t.Run("not empty", func(t *testing.T) {
 		e := make(Errors)
-		e.Add("field", &FieldError{Code: "required"})
+		e.Add("field", &FieldError{Code: codeRequired})
 		if e.IsEmpty() {
 			t.Errorf("expected non-empty, got empty")
 		}
@@ -76,9 +87,9 @@ func TestErrorsIsEmpty(t *testing.T) {
 
 func TestErrorsKeys(t *testing.T) {
 	e := make(Errors)
-	e.Add("zebra", &FieldError{Code: "invalid"})
-	e.Add("apple", &FieldError{Code: "required"})
-	e.Add("banana", &FieldError{Code: "invalid"})
+	e.Add("zebra", &FieldError{Code: codeInvalid})
+	e.Add("apple", &FieldError{Code: codeRequired})
+	e.Add("banana", &FieldError{Code: codeInvalid})
 
 	keys := e.Keys()
 	expected := []string{"apple", "banana", "zebra"}
@@ -96,7 +107,7 @@ func TestErrorsKeys(t *testing.T) {
 
 func TestFieldErrorJSONMarshal(t *testing.T) {
 	t.Run("expected and received with 0 values", func(t *testing.T) {
-		fe := &FieldError{Code: "minValue", Expected: 0, Received: 0}
+		fe := &FieldError{Code: codeMinValue, Expected: 0, Received: 0}
 		data, err := json.Marshal(fe)
 		if err != nil {
 			t.Fatalf("failed to marshal: %v", err)
@@ -110,7 +121,9 @@ func TestFieldErrorJSONMarshal(t *testing.T) {
 
 		// Unmarshal to verify the fields are present
 		var m map[string]any
-		json.Unmarshal(data, &m)
+		if err := json.Unmarshal(data, &m); err != nil {
+			t.Errorf("failed to unmarshal: %v", err)
+		}
 		if _, hasExpected := m["expected"]; !hasExpected {
 			t.Errorf("expected field not present in JSON: %s", str)
 		}
@@ -120,14 +133,16 @@ func TestFieldErrorJSONMarshal(t *testing.T) {
 	})
 
 	t.Run("omit nil extra", func(t *testing.T) {
-		fe := &FieldError{Code: "invalid", Extra: nil}
+		fe := &FieldError{Code: codeInvalid, Extra: nil}
 		data, err := json.Marshal(fe)
 		if err != nil {
 			t.Fatalf("failed to marshal: %v", err)
 		}
 
 		var m map[string]any
-		json.Unmarshal(data, &m)
+		if err := json.Unmarshal(data, &m); err != nil {
+			t.Errorf("failed to unmarshal: %v", err)
+		}
 		if _, hasExtra := m["extra"]; hasExtra {
 			t.Errorf("extra field should not be present when nil")
 		}
@@ -136,7 +151,7 @@ func TestFieldErrorJSONMarshal(t *testing.T) {
 
 func TestErrorsJSONMarshal(t *testing.T) {
 	e := make(Errors)
-	e.Add("fieldName", &FieldError{Code: "minValue", Expected: 5, Received: 4})
+	e.Add("fieldName", &FieldError{Code: codeMinValue, Expected: 5, Received: 4})
 
 	data, err := json.Marshal(e)
 	if err != nil {
@@ -149,7 +164,9 @@ func TestErrorsJSONMarshal(t *testing.T) {
 
 	// Unmarshal and verify structure
 	var m map[string]any
-	json.Unmarshal(data, &m)
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Errorf("failed to unmarshal: %v", err)
+	}
 
 	fieldErrs, ok := m["fieldName"].([]any)
 	if !ok || len(fieldErrs) != 1 {

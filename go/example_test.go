@@ -20,10 +20,10 @@ type Item struct {
 
 // ExampleForm demonstrates all field types, nested forms, and clean methods.
 type ExampleForm struct {
-	IdTest        *int            `layrz:"id,required"`
+	IDTest        *int            `layrz:"id,required"`
 	EmailText     *string         `layrz:"email,required"`
-	JsonListTest  *[]any          `layrz:"json,required,datatype=list"`
-	JsonDictTest  *map[string]any `layrz:"json,required,datatype=dict"`
+	JSONListTest  *[]any          `layrz:"json,required,datatype=list"`
+	JSONDictTest  *map[string]any `layrz:"json,required,datatype=dict"`
 	IntTest       *int            `layrz:"number,required,min_value=0,max_value=5"`
 	FloatTest     *float64        `layrz:"number,required,min_value=0,max_value=5"`
 	BoolTest      *bool           `layrz:"bool,required"`
@@ -38,7 +38,7 @@ type ExampleForm struct {
 func (f *ExampleForm) CleanFunc1() Errors {
 	return Errors{
 		"clean1": {
-			{Code: "error1"},
+			{Code: codeError1},
 			{Code: "error2"},
 		},
 	}
@@ -47,7 +47,7 @@ func (f *ExampleForm) CleanFunc1() Errors {
 func (f *ExampleForm) CleanFunc2() Errors {
 	return Errors{
 		"clean2": {
-			{Code: "error1"},
+			{Code: codeError1},
 		},
 	}
 }
@@ -78,10 +78,10 @@ func TestExampleForm(t *testing.T) {
 	rangeTextVal := "hola" // 4 characters, less than min_length=5
 
 	form := &ExampleForm{
-		IdTest:        &idVal,
+		IDTest:        &idVal,
 		EmailText:     &emailVal,
-		JsonListTest:  &jsonListVal,
-		JsonDictTest:  &jsonDictVal,
+		JSONListTest:  &jsonListVal,
+		JSONDictTest:  &jsonDictVal,
 		IntTest:       &intVal,
 		FloatTest:     &floatVal,
 		BoolTest:      &boolVal,
@@ -120,7 +120,7 @@ func TestExampleForm(t *testing.T) {
 		t.Errorf("expected 1 error for rangeTextTest, got %d", len(rangeErrs))
 	}
 	err := rangeErrs[0]
-	if err.Code != "minLength" {
+	if err.Code != codeMinLength {
 		t.Errorf("expected code minLength, got %q", err.Code)
 	}
 	if err.Expected != 5 {
@@ -138,7 +138,7 @@ func TestExampleForm(t *testing.T) {
 	if len(clean1Errs) != 2 {
 		t.Errorf("expected 2 errors for clean1, got %d", len(clean1Errs))
 	}
-	if clean1Errs[0].Code != "error1" || clean1Errs[1].Code != "error2" {
+	if clean1Errs[0].Code != codeError1 || clean1Errs[1].Code != "error2" {
 		t.Errorf("clean1 error codes mismatch: expected [error1, error2], got [%s, %s]", clean1Errs[0].Code, clean1Errs[1].Code)
 	}
 
@@ -150,7 +150,7 @@ func TestExampleForm(t *testing.T) {
 	if len(clean2Errs) != 1 {
 		t.Errorf("expected 1 error for clean2, got %d", len(clean2Errs))
 	}
-	if clean2Errs[0].Code != "error1" {
+	if clean2Errs[0].Code != codeError1 {
 		t.Errorf("expected clean2 code error1, got %q", clean2Errs[0].Code)
 	}
 
@@ -174,7 +174,7 @@ func TestExampleForm(t *testing.T) {
 		t.Errorf("expected 1 error entry, got %d", len(rangeEntry))
 	}
 	rangeErr := rangeEntry[0]
-	if code, ok := rangeErr["code"]; !ok || code != "minLength" {
+	if code, ok := rangeErr["code"]; !ok || code != codeMinLength {
 		t.Errorf("expected code=minLength, got code=%v", code)
 	}
 	if expected, ok := rangeErr["expected"]; !ok || expected != float64(5) {
@@ -253,7 +253,7 @@ func TestConventionACleanMethod(t *testing.T) {
 // TestNestedSubform tests nested subform validation.
 func TestNestedSubform(t *testing.T) {
 	form := &ExampleForm{
-		IdTest:    Ptr(1),
+		IDTest:    Ptr(1),
 		EmailText: Ptr("test@example.com"),
 		BoolTest:  Ptr(true),
 	}
@@ -275,7 +275,7 @@ func TestNestedSubform(t *testing.T) {
 	if len(addrErrs) != 1 {
 		t.Errorf("expected 1 error, got %d", len(addrErrs))
 	}
-	if addrErrs[0].Code != "minLength" {
+	if addrErrs[0].Code != codeMinLength {
 		t.Errorf("expected minLength, got %q", addrErrs[0].Code)
 	}
 }
@@ -283,7 +283,7 @@ func TestNestedSubform(t *testing.T) {
 // TestNestedSubformList tests subform_list validation.
 func TestNestedSubformList(t *testing.T) {
 	form := &ExampleForm{
-		IdTest:    Ptr(1),
+		IDTest:    Ptr(1),
 		EmailText: Ptr("test@example.com"),
 		BoolTest:  Ptr(true),
 	}
@@ -307,7 +307,7 @@ func TestNestedSubformList(t *testing.T) {
 	if !ok {
 		t.Fatal("missing items.0.name key")
 	}
-	if len(item0NameErrs) != 1 || item0NameErrs[0].Code != "required" {
+	if len(item0NameErrs) != 1 || item0NameErrs[0].Code != codeRequired {
 		t.Errorf("expected required error for items.0.name, got %v", item0NameErrs)
 	}
 
@@ -315,7 +315,7 @@ func TestNestedSubformList(t *testing.T) {
 	if !ok {
 		t.Fatal("missing items.1.price key")
 	}
-	if len(item1PriceErrs) != 1 || item1PriceErrs[0].Code != "minValue" {
+	if len(item1PriceErrs) != 1 || item1PriceErrs[0].Code != codeMinValue {
 		t.Errorf("expected minValue error for items.1.price, got %v", item1PriceErrs)
 	}
 }
@@ -323,7 +323,7 @@ func TestNestedSubformList(t *testing.T) {
 // TestNilSubform tests that a nil subform is skipped (no errors).
 func TestNilSubform(t *testing.T) {
 	form := &ExampleForm{
-		IdTest:    Ptr(1),
+		IDTest:    Ptr(1),
 		EmailText: Ptr("test@example.com"),
 		BoolTest:  Ptr(true),
 		Address:   nil, // Nil subform should be skipped

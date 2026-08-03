@@ -48,12 +48,12 @@ func ValidateNumber(value any, r NumberRules) []*FieldError {
 	}
 
 	// For datatype="float", reject int values (Python behavior)
-	if r.Datatype == "float" && isInt {
+	if r.Datatype == datatypeFloat && isInt {
 		return []*FieldError{{Code: "invalid"}}
 	}
 
 	// For datatype="int", reject float values
-	if r.Datatype == "int" && isFloat {
+	if r.Datatype == datatypeInt && isFloat {
 		return []*FieldError{{Code: "invalid"}}
 	}
 
@@ -65,7 +65,7 @@ func ValidateNumber(value any, r NumberRules) []*FieldError {
 			var expectedVal any
 			var receivedVal any
 
-			if r.Datatype == "int" {
+			if r.Datatype == datatypeInt {
 				expectedVal = int64(*r.MinValue)
 				if isInt {
 					receivedVal = int64(numVal)
@@ -91,7 +91,7 @@ func ValidateNumber(value any, r NumberRules) []*FieldError {
 			var expectedVal any
 			var receivedVal any
 
-			if r.Datatype == "int" {
+			if r.Datatype == datatypeInt {
 				expectedVal = int64(*r.MaxValue)
 				if isInt {
 					receivedVal = int64(numVal)

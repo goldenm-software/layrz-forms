@@ -5,8 +5,8 @@ import "testing"
 func TestValidateEmail(t *testing.T) {
 	t.Run("absent required true", func(t *testing.T) {
 		errs := ValidateEmail(nil, EmailRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s], got %v", codeRequired, errs)
 		}
 	})
 
@@ -33,21 +33,21 @@ func TestValidateEmail(t *testing.T) {
 
 	t.Run("invalid no at sign", func(t *testing.T) {
 		errs := ValidateEmail(Ptr("notanemail.com"), EmailRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("invalid no tld", func(t *testing.T) {
 		errs := ValidateEmail(Ptr("test@example"), EmailRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
 	t.Run("empty string empty false required true", func(t *testing.T) {
 		errs := ValidateEmail(Ptr(""), EmailRules{Required: true, Empty: false})
-		if len(errs) != 1 || errs[0].Code != "empty" {
+		if len(errs) != 1 || errs[0].Code != codeEmpty {
 			t.Errorf("expected [empty], got %v", errs)
 		}
 	})
@@ -61,8 +61,8 @@ func TestValidateEmail(t *testing.T) {
 
 	t.Run("non-empty invalid format with empty true", func(t *testing.T) {
 		errs := ValidateEmail(Ptr("not-an-email"), EmailRules{Required: true, Empty: true})
-		if len(errs) != 1 || errs[0].Code != "invalid" {
-			t.Errorf("expected [invalid], got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeInvalid {
+			t.Errorf("expected [%s], got %v", codeInvalid, errs)
 		}
 	})
 
@@ -78,8 +78,8 @@ func TestValidateEmail(t *testing.T) {
 		// But test the logic for wrong type handling
 		var val *string
 		errs := ValidateEmail(val, EmailRules{Required: true})
-		if len(errs) != 1 || errs[0].Code != "required" {
-			t.Errorf("expected [required] for nil, got %v", errs)
+		if len(errs) != 1 || errs[0].Code != codeRequired {
+			t.Errorf("expected [%s] for nil, got %v", codeRequired, errs)
 		}
 	})
 }

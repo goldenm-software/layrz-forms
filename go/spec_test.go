@@ -5,6 +5,13 @@ import (
 	"testing"
 )
 
+// Test datatype constants for spec testing.
+const (
+	testSpecDatatypeInt   = "int"
+	testSpecDatatypeFloat = "float"
+)
+
+//nolint:gocyclo // table-driven test legitimately exceeds complexity 30
 func TestCheckType(t *testing.T) {
 	t.Run("id kind accepts value and pointer forms", func(t *testing.T) {
 		tests := []struct {
@@ -100,7 +107,7 @@ func TestCheckType(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CheckType(KindNumber, int32): expected no error, got %v", err)
 		}
-		if spec.Datatype != "int" {
+		if spec.Datatype != testSpecDatatypeInt {
 			t.Errorf("expected Datatype=int, got %q", spec.Datatype)
 		}
 	})
@@ -111,7 +118,7 @@ func TestCheckType(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CheckType(KindNumber, *int32): expected no error, got %v", err)
 		}
-		if spec.Datatype != "int" {
+		if spec.Datatype != testSpecDatatypeInt {
 			t.Errorf("expected Datatype=int, got %q", spec.Datatype)
 		}
 	})
@@ -122,7 +129,7 @@ func TestCheckType(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CheckType(KindNumber, float64): expected no error, got %v", err)
 		}
-		if spec.Datatype != "float" {
+		if spec.Datatype != testSpecDatatypeFloat {
 			t.Errorf("expected Datatype=float, got %q", spec.Datatype)
 		}
 	})
@@ -133,7 +140,7 @@ func TestCheckType(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CheckType(KindNumber, *float64): expected no error, got %v", err)
 		}
-		if spec.Datatype != "float" {
+		if spec.Datatype != testSpecDatatypeFloat {
 			t.Errorf("expected Datatype=float, got %q", spec.Datatype)
 		}
 	})

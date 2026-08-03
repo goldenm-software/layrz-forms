@@ -2,6 +2,7 @@ package layrz
 
 import "testing"
 
+//nolint:gocyclo // table-driven test legitimately exceeds complexity 30
 func TestParseTag(t *testing.T) {
 	t.Run("empty and skip cases", func(t *testing.T) {
 		spec, err := ParseTag("")
@@ -21,9 +22,11 @@ func TestParseTag(t *testing.T) {
 			spec, err := ParseTag(kind)
 			if err != nil {
 				t.Errorf("ParseTag(%q) error: %v", kind, err)
+				continue
 			}
 			if spec == nil {
 				t.Errorf("ParseTag(%q) = nil, want *FieldSpec", kind)
+				continue
 			}
 			if spec.Kind != FieldKind(kind) {
 				t.Errorf("ParseTag(%q).Kind = %q, want %q", kind, spec.Kind, kind)
@@ -99,8 +102,8 @@ func TestParseTag(t *testing.T) {
 		if err != nil {
 			t.Fatalf("ParseTag error: %v", err)
 		}
-		if spec.Datatype != "int" {
-			t.Errorf("expected Datatype=int, got %q", spec.Datatype)
+		if spec.Datatype != testSpecDatatypeInt {
+			t.Errorf("expected Datatype=%s, got %q", testSpecDatatypeInt, spec.Datatype)
 		}
 	})
 

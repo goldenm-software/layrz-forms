@@ -40,10 +40,10 @@ func ValidateJSON(value any, r JSONRules) []*FieldError {
 	}
 
 	// Check if the container type matches the expected datatype
-	if r.Datatype == "dict" && !isDict {
+	if r.Datatype == datatypeDict && !isDict {
 		return []*FieldError{{Code: "invalid"}}
 	}
-	if r.Datatype == "list" && !isList {
+	if r.Datatype == datatypeList && !isList {
 		return []*FieldError{{Code: "invalid"}}
 	}
 

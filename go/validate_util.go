@@ -8,11 +8,6 @@ func deref(v any) (any, bool) {
 		return nil, false
 	}
 
-	// Check if it's a pointer
-	type ptrVal interface {
-		isPtr()
-	}
-
 	// For pointers, we need to check if the pointer itself is nil
 	// Use a type assertion approach to safely handle this
 	switch pv := v.(type) {
