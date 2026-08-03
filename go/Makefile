@@ -4,13 +4,13 @@
 help:
 	@echo "Available targets:"
 	@echo "  make format          Format code with gofmt"
-	@echo "  make lint            Check code style with gofmt"
+	@echo "  make lint            Check code style with gofmt and golangci-lint"
 	@echo "  make typecheck       Run type checks with go vet"
 	@echo "  make build           Build Go binaries"
 	@echo "  make test            Run tests with coverage (enforces 90% threshold)"
 	@echo "  make test-fast       Run tests without coverage instrumentation"
 	@echo "  make coverage-html   Generate HTML coverage report in coverage.html"
-	@echo "  make checks          Run lint, typecheck, build, and test (pre-push gate)"
+	@echo "  make checks          Run pre-commit checks (lint, vet, golangci-lint, go mod tidy)"
 
 .PHONY: format
 format:
@@ -19,6 +19,7 @@ format:
 .PHONY: lint
 lint:
 	@test -z "$$(gofmt -l .)" || { gofmt -l .; exit 1; }
+	golangci-lint run ./...
 
 .PHONY: typecheck
 typecheck:
@@ -49,4 +50,29 @@ coverage-html:
 	@echo "HTML coverage report generated in coverage.html"
 
 .PHONY: checks
-checks: lint typecheck build test
+checks:
+	@echo "Running pre-commit checks..."
+	go fmt ./...
+	go vet ./...
+	golangci-lint run ./...
+	@echo "Checking if go.mod is tidy..."
+	@cp go.mod go.mod.tmp
+	@if [ -f go.sum ]; then cp go.sum go.sum.tmp; fi
+	@go mod tidy
+	@if ! cmp -s go.mod go.mod.tmp; then \
+		echo "Error: go.mod was modified by 'go mod tidy'."; \
+		mv go.mod.tmp go.mod; \
+		if [ -f go.sum.tmp ]; then mv go.sum.tmp go.sum; fi; \
+		exit 1; \
+	fi
+	@if [ -f go.sum ]; then \
+		if ! cmp -s go.sum go.sum.tmp; then \
+			echo "Error: go.sum was modified by 'go mod tidy'."; \
+			mv go.mod.tmp go.mod; \
+			mv go.sum.tmp go.sum; \
+			exit 1; \
+		fi; \
+		rm go.sum.tmp; \
+	fi
+	@rm go.mod.tmp
+	@echo "All pre-commit checks passed."
